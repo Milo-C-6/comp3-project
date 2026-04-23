@@ -34,7 +34,8 @@ using namespace std;
 //----------------------------------------------------------------------------------
 static int framesCounter = 0;
 static int finishScreen = 0; // maybe later remove?
-static Player p1;
+static Player players[] = { Player() };
+static Rectangle mapRects[] = { {0,150,200,50}, {200,120,200,50} };
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
@@ -51,21 +52,35 @@ void InitGameplayScreen(void)
 // Gameplay Screen Update logic
 void UpdateGameplayScreen(void)
 {
-    if (IsKeyDown(KEY_D)) 
-        p1.vel.x = 2;
-    else if (IsKeyDown(KEY_A))
-        p1.vel.x = -2;
-    else
-        p1.vel.x = 0;
-
-    p1.applyMovement();
+    for (Player &plr : players)
+    {
+        // Handle input
+        if (IsKeyDown(KEY_D))
+            plr.vel.x = 2;
+        else if (IsKeyDown(KEY_A))
+            plr.vel.x = -2;
+        else
+            plr.vel.x = 0;
+        // Handle collision
+    
+        plr.applyMovement(); // will likely be removed
+    }
 }
 
 // Gameplay Screen Draw logic
 void DrawGameplayScreen(void)
 {
+    // Draw background
     DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), WHITE);
-    DrawRectangle(p1.pos.x, p1.pos.y, 25, 25, RED);
+    // Draw map
+    for (Rectangle rect : mapRects) 
+    {
+        DrawRectangle(rect.x,rect.y,rect.width,rect.height, ORANGE);
+    }
+    // Draw players
+    for (Player plr : players) {
+        DrawRectangle(plr.pos.x, plr.pos.y, 25, 25, BLUE);
+    }
 }
 
 // Gameplay Screen Unload logic
