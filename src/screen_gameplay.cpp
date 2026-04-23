@@ -62,8 +62,23 @@ void UpdateGameplayScreen(void)
         else
             plr.vel.x = 0;
         // Handle collision
-    
-        plr.applyMovement(); // will likely be removed
+        for (Rectangle mapRect : mapRects)
+        {
+            if (CheckCollisionRecs(Rectangle {plr.pos.x, plr.pos.y + plr.vel.y, 25, 25}, mapRect)) {
+                plr.vel.y = 0;
+            }
+            else
+            {
+                plr.pos.x += plr.vel.y;
+            }
+            if (CheckCollisionRecs(Rectangle {plr.pos.x  + plr.vel.x, plr.pos.y, 25, 25}, mapRect)) {
+                plr.vel.x = 0;
+            }
+            else
+            {
+                plr.pos.x += plr.vel.x;
+            }
+        }
     }
 }
 
