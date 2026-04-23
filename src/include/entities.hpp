@@ -8,7 +8,9 @@ class Player {
         Player();
         Vector2 pos;
         Vector2 vel;
+        bool onGround;
 
-        void applyMovement();
+        void updatePosition();
+        void checkCollision(Rectangle rect);
 };
 #endif

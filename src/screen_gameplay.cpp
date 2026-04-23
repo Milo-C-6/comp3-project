@@ -61,24 +61,14 @@ void UpdateGameplayScreen(void)
             plr.vel.x = -2;
         else
             plr.vel.x = 0;
+
+        if (IsKeyDown(KEY_SPACE) && plr.onGround)
+            plr.vel.y = -4;
+
         // Handle collision
         for (Rectangle mapRect : mapRects)
-        {
-            if (CheckCollisionRecs(Rectangle {plr.pos.x, plr.pos.y + plr.vel.y, 25, 25}, mapRect)) {
-                plr.vel.y = 0;
-            }
-            else
-            {
-                plr.pos.x += plr.vel.y;
-            }
-            if (CheckCollisionRecs(Rectangle {plr.pos.x  + plr.vel.x, plr.pos.y, 25, 25}, mapRect)) {
-                plr.vel.x = 0;
-            }
-            else
-            {
-                plr.pos.x += plr.vel.x;
-            }
-        }
+           plr.checkCollision(mapRect);
+        plr.updatePosition();
     }
 }
 
