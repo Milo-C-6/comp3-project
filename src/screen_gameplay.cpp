@@ -25,6 +25,7 @@
 
 #include "raylib.h"
 #include "screens.h"
+#include "entities.hpp"
 #include <iostream>
 
 using namespace std;
@@ -32,7 +33,8 @@ using namespace std;
 // Module Variables Definition (local)
 //----------------------------------------------------------------------------------
 static int framesCounter = 0;
-static int finishScreen = 0;
+static int finishScreen = 0; // maybe later remove?
+static Player p1;
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
@@ -49,21 +51,21 @@ void InitGameplayScreen(void)
 // Gameplay Screen Update logic
 void UpdateGameplayScreen(void)
 {
-    // TODO: Update GAMEPLAY screen variables here!
+    if (IsKeyDown(KEY_D)) 
+        p1.vel.x = 2;
+    else if (IsKeyDown(KEY_A))
+        p1.vel.x = -2;
+    else
+        p1.vel.x = 0;
 
-    // Press enter or tap to change to ENDING screen
-    if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
-    {
-        cout << "eviler gang" << endl;
-    }
+    p1.applyMovement();
 }
 
 // Gameplay Screen Draw logic
 void DrawGameplayScreen(void)
 {
-    // TODO: Draw GAMEPLAY screen here!
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), PURPLE);
-    
+    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), WHITE);
+    DrawRectangle(p1.pos.x, p1.pos.y, 25, 25, RED);
 }
 
 // Gameplay Screen Unload logic
