@@ -26,10 +26,13 @@ using namespace std;
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
 //----------------------------------------------------------------------------------
+static float screenWidth = 800; // TODO make this use the raylib_game.cpp screen sizes
+static float screenHeight = 450;
 static int framesCounter = 0;
 static int finishScreen = 0; // maybe later remove?
-static Player players[] = { Player() };
-static Rectangle mapRects[] = { {0,150,200,50}, {200,120,200,50} };
+static Player players[] = { Player(50, 50, KEY_A, KEY_D, KEY_W), Player(150, 50, KEY_LEFT, KEY_RIGHT, KEY_UP) };
+static Rectangle mapRects[] = { {0,150,200,50}, {200,120,200,50}, {400,150,900,50} };
+static Camera2D camera = { 0 };
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
@@ -38,48 +41,62 @@ static Rectangle mapRects[] = { {0,150,200,50}, {200,120,200,50} };
 // Gameplay Screen Initialization logic
 void InitGameplayScreen(void)
 {
-    // TODO: Initialize GAMEPLAY screen variables here!
     framesCounter = 0;
     finishScreen = 0;
+    // Camera
+    camera.target =  players[0].pos;
+    camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
+    camera.rotation = 0.0f;
+    camera.zoom = 1.0f;
 }
 
 // Gameplay Screen Update logic
 void UpdateGameplayScreen(void)
 {
-    for (Player &plr : players)
-    {
-        // Handle input
-        if (IsKeyDown(KEY_D))
-            plr.vel.x = 2;
-        else if (IsKeyDown(KEY_A))
-            plr.vel.x = -2;
-        else
-            plr.vel.x = 0;
+    // Update camera
+    Vector2 minV2 = camera.target;
+    Vector2 maxV2 = camera.target;
 
-        if (IsKeyDown(KEY_SPACE) && plr.onGround)
-            plr.vel.y = -4;
+    for (Player &plr : players)
+    {   
+        minV2 = Vector2Min(minV2, Vector2AddValue(plr.pos, -10));
+        maxV2 = Vector2Max(maxV2, Vector2AddValue(plr.pos, 35));
+        // Update players
+        plr.checkControls();
 
         // Handle collision
         for (Rectangle mapRect : mapRects)
            plr.checkCollision(mapRect);
         plr.updatePosition();
     }
+
+    // Make sure camera encompasses all players
+    Vector2 widthV2 = Vector2Subtract(maxV2, minV2);
+    Vector2 centerV2 = Vector2Add(minV2, Vector2Scale(widthV2, 0.5));
+    camera.target = centerV2;
+
+    Vector2 zoomScaleV2 = Vector2Divide({screenWidth, screenHeight}, Vector2Max(widthV2, {screenWidth, screenHeight})); // Maps will probably have a max, so the Vector2Min will eventually be replaced with Vector2Clamp
+    camera.zoom = min(zoomScaleV2.x, zoomScaleV2.y);
 }
 
 // Gameplay Screen Draw logic
 void DrawGameplayScreen(void)
 {
     // Draw background
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), WHITE);
-    // Draw map
-    for (Rectangle rect : mapRects) 
-    {
-        DrawRectangle(rect.x,rect.y,rect.width,rect.height, ORANGE);
-    }
-    // Draw players
-    for (Player plr : players) {
-        DrawRectangle(plr.pos.x, plr.pos.y, 25, 25, BLUE);
-    }
+    ClearBackground(RAYWHITE);
+
+    BeginMode2D(camera);
+
+        // Draw map
+        for (Rectangle rect : mapRects) 
+            DrawRectangleRec(rect, ORANGE);
+
+        // Draw players
+        for (Player plr : players) {
+            DrawRectangle(plr.pos.x, plr.pos.y, 25, 25, BLUE);
+        }
+
+    EndMode2D();
 }
 
 // Gameplay Screen Unload logic

@@ -24,12 +24,14 @@
 
 class Player {
     public:
-        Player();
+        Player(float x, float y, KeyboardKey left, KeyboardKey right, KeyboardKey jump);
         Vector2 pos;
         Vector2 vel;
         bool onGround;
+        KeyboardKey controls[3];
 
         void updatePosition();
         void checkCollision(Rectangle rect);
+        void checkControls();
 };
 #endif
