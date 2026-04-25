@@ -20,6 +20,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include "entities.hpp"
+#include "map_parts.hpp"
 
 Player::Player(float x, float y, KeyboardKey left, KeyboardKey right, KeyboardKey jump)
 {
@@ -31,12 +32,76 @@ Player::Player(float x, float y, KeyboardKey left, KeyboardKey right, KeyboardKe
     controls[2] = jump;
 }
 
-void Player::updatePosition() {
+void Player::UpdatePosition() {
     pos = Vector2Add(pos, vel);
     vel.y += 0.1; // Apply gravity
 }
-void Player::checkCollision(Rectangle rect) {
-    if (CheckCollisionRecs(Rectangle {pos.x+1, pos.y+1 + vel.y, 23, 23}, rect)) { // plus 1 to center the collision
+bool Player::CheckCollision(MapPart part) {
+    // TODO: Make the player *glide* on the slope, rather than just simple triangle collision
+
+    bool yCollide = false;
+    bool xCollide = false;
+    
+    if (part.partType == RECTANGLE)
+    {
+        Rectangle partRect = {part.points[0].x, part.points[0].y, part.points[1].x, part.points[1].y};
+        yCollide = CheckCollisionRecs(Rectangle {pos.x+1, pos.y+1 + vel.y, 23, 23}, partRect); // plus 1 to center the collision
+        xCollide = CheckCollisionRecs(Rectangle {pos.x+1  + vel.x, pos.y+1, 23, 23}, partRect);
+    }
+
+    if (part.partType == SLOPE) // Will not account if the player is INSIDE the triangle, only the lines around them. Would love a better solution
+    {
+        if (vel.y < 0) 
+        {
+            for (int i = 0; i < 3; i++) {
+                int i2 = (i+1) % 3; // To get the Vector2 after I, loop back to start
+                // Top line of box
+                yCollide = CheckCollisionLines( {pos.x+1, pos.y-1+vel.y}, {pos.x+22, pos.y-1+vel.y}, part.points.at(i), part.points.at(i2), NULL);
+                if (yCollide)
+                    break;
+            }
+        }
+        else if (vel.y > 0) 
+        {
+            for (int i = 0; i < 3; i++) {
+                int i2 = (i+1) % 3;
+                // Bottom line of box
+                yCollide = CheckCollisionLines( {pos.x+1, pos.y+22+vel.y}, {pos.x+22, pos.y+22+vel.y}, part.points.at(i), part.points.at(i2), NULL);
+                if (yCollide)
+                    break;
+            }
+        }
+
+        for (int i = 0; i < 3; i++) {
+            int i2 = (i+1) % 3; 
+            // Top line of box
+            xCollide = CheckCollisionLines( {pos.x+1+vel.x, pos.y-1}, {pos.x+22+vel.x, pos.y-1}, part.points.at(i), part.points.at(i2), NULL);
+            if (xCollide)
+                break;
+
+            if (vel.x < 0) 
+            {
+                // Left line of box
+                xCollide = CheckCollisionLines( {pos.x+1+vel.x, pos.y-1}, {pos.x+22+vel.x, pos.y+22}, part.points.at(i), part.points.at(i2), NULL);
+                if (xCollide)
+                    break;
+            }
+            else if (vel.x > 0)
+            {
+                // Right line of box
+                xCollide = CheckCollisionLines( {pos.x+22+vel.x, pos.y-1}, {pos.x+22+vel.x, pos.y+22}, part.points.at(i), part.points.at(i2), NULL);
+                if (xCollide)
+                    break;
+            }
+            // Bottom line of box
+            xCollide = CheckCollisionLines( {pos.x+1+vel.x, pos.y+22}, {pos.x+22+vel.x, pos.y+22}, part.points.at(i), part.points.at(i2), NULL);
+            if (xCollide)
+                break;
+        }
+    }
+
+    if (yCollide)
+    {
         if (vel.y > 0.1)
             onGround = true;
         vel.y = 0;
@@ -44,10 +109,12 @@ void Player::checkCollision(Rectangle rect) {
     else if (vel.y != 0)
         onGround = false;
     
-    if (CheckCollisionRecs(Rectangle {pos.x+1  + vel.x, pos.y+1, 23, 23}, rect))
+    if (xCollide)
         vel.x = 0;
+
+    return xCollide || yCollide;
 }
-void Player::checkControls() {
+void Player::CheckControls() {
     if (IsKeyDown(controls[0]))
         vel.x = -2;
     else if (IsKeyDown(controls[1]))

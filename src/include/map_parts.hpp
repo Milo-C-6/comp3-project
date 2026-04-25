@@ -17,23 +17,25 @@
 *
 **********************************************************************************************/
 
-#ifndef ENTITIES_HPP
-#define ENTITIES_HPP
+#ifndef MAP_PART_HPP
+#define MAP_PART_HPP
 #include "raylib.h"
 #include "raymath.h"
-#include "map_parts.hpp"
+#include <vector>
 
-class Player {
+using namespace std;
+
+typedef enum PartType { RECTANGLE, SLOPE, TRAMPOLINE } PartType;
+typedef enum PartAttributes { KILL } PartAttributes;
+
+class MapPart {
     public:
-        Vector2 pos;
-        Vector2 vel;
-        bool onGround;
-        KeyboardKey controls[3];
+        PartType partType;
+        Color color;
+        vector<Vector2> points; // For rectangles first v2 is pos, second is width. Slopes (triangles) have 3 v2 points. *maybe a array with a set value of 3 would be better?*
+        vector<PartAttributes> attributes; // If KILL stays the only attribute, then this will probably be changed with a kill bool
         
-        Player(float x, float y, KeyboardKey left, KeyboardKey right, KeyboardKey jump);
-        
-        void UpdatePosition();
-        bool CheckCollision(MapPart part);
-        void CheckControls();
+        MapPart(PartType partType, Color color, vector<Vector2> points, vector<PartAttributes> attributes);
+        MapPart(PartType partType, Color color, vector<Vector2> points);
 };
 #endif

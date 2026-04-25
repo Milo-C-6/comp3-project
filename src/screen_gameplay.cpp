@@ -20,7 +20,9 @@
 #include "raylib.h"
 #include "screens.h"
 #include "entities.hpp"
+#include "map_parts.hpp"
 #include <iostream>
+#include <vector>
 
 using namespace std;
 //----------------------------------------------------------------------------------
@@ -31,12 +33,23 @@ static float screenHeight = 450;
 static int framesCounter = 0;
 static int finishScreen = 0; // maybe later remove?
 static Player players[] = { Player(50, 50, KEY_A, KEY_D, KEY_W), Player(150, 50, KEY_LEFT, KEY_RIGHT, KEY_UP) };
-static Rectangle mapRects[] = { {0,150,200,50}, {200,120,200,50}, {400,150,900,50} };
+static vector<MapPart> map;
 static Camera2D camera = { 0 };
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
 //----------------------------------------------------------------------------------
+
+void LoadLevel(void)
+{
+    // TODO: We need a proper file level format that we can use to load from, rather than hard coded levels.
+    map = {
+        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {0, 150}, {200, 50} }),
+        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {200, 120}, {200, 50} }),
+        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 150}, {900, 50} }),
+        MapPart(SLOPE, GOLD, vector<Vector2>{ {400, 120}, {400, 150}, {500, 150} })
+    };
+}
 
 // Gameplay Screen Initialization logic
 void InitGameplayScreen(void)
@@ -48,6 +61,7 @@ void InitGameplayScreen(void)
     camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
+    LoadLevel();
 }
 
 // Gameplay Screen Update logic
@@ -62,12 +76,19 @@ void UpdateGameplayScreen(void)
         minV2 = Vector2Min(minV2, Vector2AddValue(plr.pos, -10));
         maxV2 = Vector2Max(maxV2, Vector2AddValue(plr.pos, 35));
         // Update players
-        plr.checkControls();
+        plr.CheckControls();
 
         // Handle collision
-        for (Rectangle mapRect : mapRects)
-           plr.checkCollision(mapRect);
-        plr.updatePosition();
+        // for (Player plr2 : players)
+        // {
+        //     if (plr == plr2)
+        //         continue;
+        //     plr.checkCollision()
+        // }
+        for (MapPart part : map)
+            if (plr.CheckCollision(part))
+                continue;
+        plr.UpdatePosition();
     }
 
     // Make sure camera encompasses all players
@@ -88,8 +109,11 @@ void DrawGameplayScreen(void)
     BeginMode2D(camera);
 
         // Draw map
-        for (Rectangle rect : mapRects) 
-            DrawRectangleRec(rect, ORANGE);
+        for (MapPart part : map) 
+            if (part.partType == RECTANGLE)
+                DrawRectangle(part.points[0].x, part.points[0].y, part.points[1].x, part.points[1].y, part.color);
+            else if (part.partType == SLOPE)
+                DrawTriangle(part.points[0], part.points[1], part.points[2], part.color);
 
         // Draw players
         for (Player plr : players) {

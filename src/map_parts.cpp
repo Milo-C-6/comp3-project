@@ -17,23 +17,20 @@
 *
 **********************************************************************************************/
 
-#ifndef ENTITIES_HPP
-#define ENTITIES_HPP
 #include "raylib.h"
-#include "raymath.h"
 #include "map_parts.hpp"
+#include <vector>
 
-class Player {
-    public:
-        Vector2 pos;
-        Vector2 vel;
-        bool onGround;
-        KeyboardKey controls[3];
-        
-        Player(float x, float y, KeyboardKey left, KeyboardKey right, KeyboardKey jump);
-        
-        void UpdatePosition();
-        bool CheckCollision(MapPart part);
-        void CheckControls();
-};
-#endif
+MapPart::MapPart(PartType partType, Color color, vector<Vector2> points, vector<PartAttributes> attributes)
+{
+    this->partType = partType;
+    this->color = color;
+    this->points = points;
+    this->attributes = attributes;
+}
+MapPart::MapPart(PartType partType, Color color, vector<Vector2> points)
+{
+    this->partType = partType;
+    this->color = color;
+    this->points = points;
+}
