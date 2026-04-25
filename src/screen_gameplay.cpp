@@ -44,10 +44,11 @@ void LoadLevel(void)
 {
     // TODO: We need a proper file level format that we can use to load from, rather than hard coded levels.
     map = {
+        MapPart(SLOPE, GOLD, vector<Vector2>{ {399, 119}, {399, 155}, {500, 155} }), // Slopes have to be drawn first, and slightly overlapped into other things
         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {0, 150}, {200, 50} }),
         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {200, 120}, {200, 50} }),
         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 150}, {900, 50} }),
-        MapPart(SLOPE, GOLD, vector<Vector2>{ {400, 120}, {400, 150}, {500, 150} })
+        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 0}, {900, 50} })
     };
 }
 
@@ -86,8 +87,7 @@ void UpdateGameplayScreen(void)
         //     plr.checkCollision()
         // }
         for (MapPart part : map)
-            if (plr.CheckCollision(part))
-                continue;
+            plr.CheckCollision(part);
         plr.UpdatePosition();
     }
 
@@ -116,9 +116,8 @@ void DrawGameplayScreen(void)
                 DrawTriangle(part.points[0], part.points[1], part.points[2], part.color);
 
         // Draw players
-        for (Player plr : players) {
+        for (Player plr : players) 
             DrawRectangle(plr.pos.x, plr.pos.y, 25, 25, BLUE);
-        }
 
     EndMode2D();
 }

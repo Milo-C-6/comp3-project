@@ -28,12 +28,13 @@ class Player {
         Vector2 pos;
         Vector2 vel;
         bool onGround;
+        bool onSlope;
         KeyboardKey controls[3];
         
         Player(float x, float y, KeyboardKey left, KeyboardKey right, KeyboardKey jump);
         
         void UpdatePosition();
-        bool CheckCollision(MapPart part);
+        void CheckCollision(MapPart part);
         void CheckControls();
 };
 #endif
