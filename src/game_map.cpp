@@ -17,26 +17,12 @@
 *
 **********************************************************************************************/
 
-#ifndef MAP_PART_HPP
-#define MAP_PART_HPP
 #include "raylib.h"
-#include <vector>
-#include <unordered_map>
-
+#include "game_map.hpp"
+#include "map_parts.hpp"
+#include <iostream>
 using namespace std;
 
-typedef enum PartType { RECTANGLE, SLOPE } PartType;
-typedef enum PartAttributes { WIN, KILL, BOUNCY, LAUNCHER } PartAttributes;
-
-class MapPart 
-{
-    public:
-        PartType partType;
-        Color color;
-        vector<Vector2> points; // For rectangles first v2 is pos, second is width. Slopes (triangles) have 3 v2 points. *maybe a array with a set value of 3 would be better?*
-        unordered_map<PartAttributes, int> attributes;
-        
-        MapPart(PartType partType, Color color, vector<Vector2> points, unordered_map<PartAttributes, int> attributes);
-        MapPart(PartType partType, Color color, vector<Vector2> points);
-};
-#endif
+// there will eventually be a function to save and load maps but uh, i guess for now this is empty
+// or wait sorry I mean
+// TODO: Create functions to save and load maps

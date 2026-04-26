@@ -20,8 +20,9 @@
 #include "raylib.h"
 #include "map_parts.hpp"
 #include <vector>
+#include <unordered_map>
 
-MapPart::MapPart(PartType partType, Color color, vector<Vector2> points, vector<PartAttributes> attributes)
+MapPart::MapPart(PartType partType, Color color, vector<Vector2> points, unordered_map<PartAttributes, int> attributes)
 {
     this->partType = partType;
     this->color = color;

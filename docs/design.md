@@ -1,14 +1,22 @@
-## Interactable blocks
+## Part attributes 
 
-Blocks that will change the player or world when touched
+Optional attributes that can be put onto parts to change the world or player
 
-### Kill block
+## WIN
+
+Finishes the screen, goes to next level
+
+### KILL
 
 Restarts the screen
 
-### Trampoline
+### BOUNCY
 
-Launches the player upwards x amount
+Bounces the player
+
+### LAUNCHER (int: launch amount)
+
+Launches the player upwards
 
 ### Lock block
 

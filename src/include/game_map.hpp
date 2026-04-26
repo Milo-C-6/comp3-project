@@ -17,26 +17,24 @@
 *
 **********************************************************************************************/
 
-#ifndef MAP_PART_HPP
-#define MAP_PART_HPP
+#ifndef GAME_MAP_HPP
+#define GAME_MAP_HPP
 #include "raylib.h"
-#include <vector>
+#include "map_parts.hpp"
+#include <string>
 #include <unordered_map>
 
-using namespace std;
-
-typedef enum PartType { RECTANGLE, SLOPE } PartType;
-typedef enum PartAttributes { WIN, KILL, BOUNCY, LAUNCHER } PartAttributes;
-
-class MapPart 
+class GameMap 
 {
     public:
-        PartType partType;
-        Color color;
-        vector<Vector2> points; // For rectangles first v2 is pos, second is width. Slopes (triangles) have 3 v2 points. *maybe a array with a set value of 3 would be better?*
-        unordered_map<PartAttributes, int> attributes;
+        string title;
+        string description;
+        string author;
+        Vector2 spawn;
+        Vector2 size;
+        vector<MapPart> mapParts;
         
-        MapPart(PartType partType, Color color, vector<Vector2> points, unordered_map<PartAttributes, int> attributes);
-        MapPart(PartType partType, Color color, vector<Vector2> points);
+        GameMap();
 };
+
 #endif

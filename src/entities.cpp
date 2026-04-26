@@ -26,8 +26,8 @@ using namespace std;
 
 Player::Player(float x, float y, KeyboardKey left, KeyboardKey right, KeyboardKey jump)
 {
-    this->pos = {x, y};
-    this->vel = {0, 0};
+    this->pos = Vector2{x, y};
+    this->vel = Vector2{0, 0};
     this->onGround = false;
     this->onSlope = false;
     controls[0] = left; // there has got to be a better way to do this
@@ -35,11 +35,13 @@ Player::Player(float x, float y, KeyboardKey left, KeyboardKey right, KeyboardKe
     controls[2] = jump;
 }
 
-void Player::UpdatePosition() {
+void Player::UpdatePosition() 
+{
     pos = Vector2Add(pos, vel);
     vel.y += 0.1; // Apply gravity
 }
-void Player::CheckCollision(MapPart part) {
+bool Player::CheckCollision(MapPart part) 
+{
     // TODO: Make the player *glide* on the slope, rather than just simple triangle collision
     bool yCollide = false;
     bool xCollide = false;
@@ -58,7 +60,7 @@ void Player::CheckCollision(MapPart part) {
                     onGround = true;
                     onSlope = true;
                     vel.y = 0;
-                    return;
+                    return true;
                 }
             }
         }
@@ -78,7 +80,8 @@ void Player::CheckCollision(MapPart part) {
         }
         
         
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 3; i++) 
+        {
             int i2 = (i+1) % 3;
             // Top line of box
             xCollide = CheckCollisionLines( {pos.x+1+vel.x, pos.y-1}, {pos.x+22+vel.x, pos.y-1}, part.points.at(i), part.points.at(i2), NULL);
@@ -102,7 +105,7 @@ void Player::CheckCollision(MapPart part) {
         }
     }
     else if (onSlope)
-        return;
+        return false;
     else if (part.partType == RECTANGLE)
     {
         Rectangle partRect = {part.points[0].x, part.points[0].y, part.points[1].x, part.points[1].y};
@@ -113,18 +116,32 @@ void Player::CheckCollision(MapPart part) {
     if (xCollide)
         vel.x = 0;
 
-    toYCollide:
-
     if (yCollide)
     {
         if (vel.y > 0.1)
             onGround = true;
-        vel.y = 0;
+
+        bool resetY = true;
+        if (part.attributes.count(BOUNCY)) 
+        {
+            vel.y /= -1.1;
+            resetY = false;
+        }
+        if (part.attributes.count(LAUNCHER)) 
+        {
+            vel.y = part.attributes[LAUNCHER];
+            resetY = false;
+        }
+        if (resetY)
+            vel.y = 0;
     }
     else if (vel.y != 0)
         onGround = false;
+
+    return xCollide || yCollide;
 }
-void Player::CheckControls() {
+void Player::CheckControls() 
+{
     if (IsKeyDown(controls[0]))
         vel.x = -2;
     else if (IsKeyDown(controls[1]))

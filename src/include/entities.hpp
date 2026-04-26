@@ -20,10 +20,10 @@
 #ifndef ENTITIES_HPP
 #define ENTITIES_HPP
 #include "raylib.h"
-#include "raymath.h"
 #include "map_parts.hpp"
 
-class Player {
+class Player 
+{
     public:
         Vector2 pos;
         Vector2 vel;
@@ -34,7 +34,7 @@ class Player {
         Player(float x, float y, KeyboardKey left, KeyboardKey right, KeyboardKey jump);
         
         void UpdatePosition();
-        void CheckCollision(MapPart part);
+        bool CheckCollision(MapPart part);
         void CheckControls();
 };
 #endif

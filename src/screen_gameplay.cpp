@@ -21,8 +21,10 @@
 #include "screens.h"
 #include "entities.hpp"
 #include "map_parts.hpp"
+#include "game_map.hpp"
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 
 using namespace std;
 //----------------------------------------------------------------------------------
@@ -32,8 +34,8 @@ static float screenWidth = 800; // TODO make this use the raylib_game.cpp screen
 static float screenHeight = 450;
 static int framesCounter = 0;
 static int finishScreen = 0; // maybe later remove?
-static Player players[] = { Player(50, 50, KEY_A, KEY_D, KEY_W), Player(150, 50, KEY_LEFT, KEY_RIGHT, KEY_UP) };
-static vector<MapPart> map;
+static Player players[] = { Player(50, 50, KEY_A, KEY_D, KEY_W), Player(50, 80, KEY_LEFT, KEY_RIGHT, KEY_UP) };
+static GameMap gameMap;
 static Camera2D camera = { 0 };
 
 //----------------------------------------------------------------------------------
@@ -43,12 +45,23 @@ static Camera2D camera = { 0 };
 void LoadLevel(void)
 {
     // TODO: We need a proper file level format that we can use to load from, rather than hard coded levels.
-    map = {
+    gameMap.title = "0: Debug";
+    gameMap.description = "For debbugging the game";
+    gameMap.author = "Milo";
+    gameMap.spawn = Vector2{50, 50};
+    gameMap.size = Vector2{2500, 500};
+
+    gameMap.mapParts = {
         MapPart(SLOPE, GOLD, vector<Vector2>{ {399, 119}, {399, 155}, {500, 155} }), // Slopes have to be drawn first, and slightly overlapped into other things
         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {0, 150}, {200, 50} }),
         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {200, 120}, {200, 50} }),
-        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 150}, {900, 50} }),
-        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 0}, {900, 50} })
+        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 150}, {500, 50} }),
+        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 0}, {500, 50} }),
+        MapPart(RECTANGLE, RED, vector<Vector2>{ {300, 0}, {50, 50} }, unordered_map<PartAttributes, int>{ {KILL, 1} }),
+        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {-250, 200}, {200, 50} }),
+        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {-50, 150}, {25, 50} }),
+        MapPart(RECTANGLE, BLACK, vector<Vector2>{ {-85, 150}, {25, 50} }, unordered_map<PartAttributes, int>{ {LAUNCHER, -5} }),
+        MapPart(RECTANGLE, LIME, vector<Vector2>{ {-120, 150}, {25, 50} }, unordered_map<PartAttributes, int>{ {BOUNCY, 1} }),
     };
 }
 
@@ -65,6 +78,17 @@ void InitGameplayScreen(void)
     LoadLevel();
 }
 
+void RestartLevel(void)
+{
+    int i = 0;
+    for (Player &plr : players)
+    {
+        plr.pos = Vector2Add( gameMap.spawn, {0, static_cast<float>(30*i)} );
+        plr.vel = Vector2Zero();
+        i++;
+    }
+}
+
 // Gameplay Screen Update logic
 void UpdateGameplayScreen(void)
 {
@@ -74,6 +98,13 @@ void UpdateGameplayScreen(void)
 
     for (Player &plr : players)
     {   
+        // Check if they're out of bounds
+        if (!CheckCollisionPointRec(plr.pos, {-gameMap.size.x/2, -gameMap.size.y/2, gameMap.size.x, gameMap.size.y}))
+        {
+            RestartLevel();
+            return;
+        }
+
         minV2 = Vector2Min(minV2, Vector2AddValue(plr.pos, -10));
         maxV2 = Vector2Max(maxV2, Vector2AddValue(plr.pos, 35));
         // Update players
@@ -86,8 +117,9 @@ void UpdateGameplayScreen(void)
         //         continue;
         //     plr.checkCollision()
         // }
-        for (MapPart part : map)
-            plr.CheckCollision(part);
+        for (MapPart part : gameMap.mapParts)
+            if (plr.CheckCollision(part) && part.attributes.count(KILL))
+                RestartLevel();
         plr.UpdatePosition();
     }
 
@@ -109,7 +141,7 @@ void DrawGameplayScreen(void)
     BeginMode2D(camera);
 
         // Draw map
-        for (MapPart part : map) 
+        for (MapPart part : gameMap.mapParts) 
             if (part.partType == RECTANGLE)
                 DrawRectangle(part.points[0].x, part.points[0].y, part.points[1].x, part.points[1].y, part.color);
             else if (part.partType == SLOPE)
@@ -126,6 +158,8 @@ void DrawGameplayScreen(void)
 void UnloadGameplayScreen(void)
 {
     // TODO: Unload GAMEPLAY screen variables here!
+    // what just delete everything?
+    // probably just set gamemap, players, and camera to nothing.
 }
 
 // Gameplay Screen should finish?
