@@ -19,6 +19,8 @@
 
 #include "raylib.h"
 #include "screens.h"    // NOTE: Declares global (extern) variables and screens functions
+#include <iostream>
+#include <string>
 
 #if defined(PLATFORM_WEB)
     #include <emscripten/emscripten.h>
@@ -60,7 +62,7 @@ static void UpdateDrawFrame(void);          // Update and draw one frame
 //----------------------------------------------------------------------------------
 // Program main entry point
 //----------------------------------------------------------------------------------
-int main(void)
+int main(int argc, char *argv[])
 {
     // Initialization
     //---------------------------------------------------------
@@ -77,8 +79,16 @@ int main(void)
     PlayMusicStream(music);
 
     // Setup and init first screen
-    currentScreen = GAMEPLAY;
-    InitGameplayScreen();
+    if (argc > 1 && argv[1] == std::string("-e")) 
+    {
+        currentScreen = EDITOR;
+        InitEditorScreen();
+    }
+    else
+    {
+        currentScreen = GAMEPLAY;
+        InitGameplayScreen();
+    }
 
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 60, 1);
@@ -103,6 +113,7 @@ int main(void)
         case OPTIONS: UnloadOptionsScreen(); break;
         case GAMEPLAY: UnloadGameplayScreen(); break;
         case ENDING: UnloadEndingScreen(); break;
+        case EDITOR: UnloadEditorScreen(); break;
         default: break;
     }
 
@@ -133,6 +144,7 @@ static void ChangeToScreen(GameScreen screen)
         case OPTIONS: UnloadOptionsScreen(); break;
         case GAMEPLAY: UnloadGameplayScreen(); break;
         case ENDING: UnloadEndingScreen(); break;
+        case EDITOR: UnloadEditorScreen(); break;
         default: break;
     }
 
@@ -144,6 +156,7 @@ static void ChangeToScreen(GameScreen screen)
         case OPTIONS: InitOptionsScreen(); break;
         case GAMEPLAY: InitGameplayScreen(); break;
         case ENDING: InitEndingScreen(); break;
+        case EDITOR: InitEditorScreen(); break;
         default: break;
     }
 
@@ -181,6 +194,7 @@ static void UpdateTransition(void)
                 case OPTIONS: UnloadOptionsScreen(); break;
                 case GAMEPLAY: UnloadGameplayScreen(); break;
                 case ENDING: UnloadEndingScreen(); break;
+                case EDITOR: UnloadEditorScreen(); break;
                 default: break;
             }
 
@@ -192,6 +206,7 @@ static void UpdateTransition(void)
                 case OPTIONS: InitOptionsScreen(); break;
                 case GAMEPLAY: InitGameplayScreen(); break;
                 case ENDING: InitEndingScreen(); break;
+                case EDITOR: InitEditorScreen(); break;
                 default: break;
             }
 
@@ -270,6 +285,13 @@ static void UpdateDrawFrame(void)
                 if (FinishEndingScreen() == 1) TransitionToScreen(TITLE);
 
             } break;
+            case EDITOR:
+            {
+                UpdateEditorScreen();
+
+                if (FinishEndingScreen() == 1) TransitionToScreen(TITLE);
+
+            } break;
             default: break;
         }
     }
@@ -289,6 +311,7 @@ static void UpdateDrawFrame(void)
             case OPTIONS: DrawOptionsScreen(); break;
             case GAMEPLAY: DrawGameplayScreen(); break;
             case ENDING: DrawEndingScreen(); break;
+            case EDITOR: DrawEditorScreen(); break;
             default: break;
         }
 

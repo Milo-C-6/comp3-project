@@ -29,12 +29,13 @@ _TODO: Show your game to the world, animated GIFs recommended!._
     1. `cmake --build build`
 
 Executable file will be in  (`../build/${PROJECT_NAME}/${PROJECT_NAME}`)
+Currently running it will just load the gameplay screen, however you can add `-e` to the end to launch the editor.
 
 ## Credits
 
  - [Milo](https://github.com/Milo-C-6)
  - [Trace](https://github.com/CoolGuyTrace)
- - [@raysan5](https://github.com/raysan5) - for making raylib <3
+ - [@raysan5](https://github.com/raysan5) - for making raylib & raygui <3
 
 ### Links
 

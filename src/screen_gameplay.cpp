@@ -40,31 +40,14 @@ static GameMap gameMap;
 static Camera2D camera = { 0 };
 
 //----------------------------------------------------------------------------------
+// Module Functions Declaration
+//----------------------------------------------------------------------------------
+static void LoadLevel(void);  // Create the variables for the gameMap
+static void RestartLevel(void);  // Move players to spawn of level, and reset any moving parts back to original place.
+
+//----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
 //----------------------------------------------------------------------------------
-
-void LoadLevel(void)
-{
-    // TODO: We need a proper file level format that we can use to load from, rather than hard coded levels.
-    gameMap.title = "0: Debug";
-    gameMap.description = "For debbugging the game";
-    gameMap.author = "Milo";
-    gameMap.spawn = Vector2{50, 50};
-    gameMap.size = Vector2{2500, 500};
-
-    gameMap.mapParts = {
-        MapPart(SLOPE, GOLD, vector<Vector2>{ {399, 119}, {399, 155}, {500, 155} }), // Slopes have to be drawn first, and slightly overlapped into other things
-        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {0, 150}, {200, 50} }),
-        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {200, 120}, {200, 50} }),
-        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 150}, {500, 50} }),
-        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 0}, {500, 50} }),
-        MapPart(RECTANGLE, RED, vector<Vector2>{ {300, 0}, {50, 50} }, unordered_map<PartAttributes, int>{ {KILL, 1} }),
-        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {-250, 200}, {200, 50} }),
-        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {-50, 150}, {25, 50} }),
-        MapPart(RECTANGLE, BLACK, vector<Vector2>{ {-85, 150}, {25, 50} }, unordered_map<PartAttributes, int>{ {LAUNCHER, -5} }),
-        MapPart(RECTANGLE, LIME, vector<Vector2>{ {-120, 150}, {25, 50} }, unordered_map<PartAttributes, int>{ {BOUNCY, 1} }),
-    };
-}
 
 // Gameplay Screen Initialization logic
 void InitGameplayScreen(void)
@@ -77,17 +60,6 @@ void InitGameplayScreen(void)
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
     LoadLevel();
-}
-
-void RestartLevel(void)
-{
-    int i = 0;
-    for (Player &plr : players)
-    {
-        plr.pos = Vector2Add( gameMap.spawn, {0, static_cast<float>(30*i)} );
-        plr.vel = Vector2Zero();
-        i++;
-    }
 }
 
 // Gameplay Screen Update logic
@@ -136,9 +108,6 @@ void UpdateGameplayScreen(void)
 // Gameplay Screen Draw logic
 void DrawGameplayScreen(void)
 {
-    // Draw background
-    ClearBackground(RAYWHITE);
-
     BeginMode2D(camera);
 
         // Draw map
@@ -167,4 +136,38 @@ void UnloadGameplayScreen(void)
 int FinishGameplayScreen(void)
 {
     return finishScreen;
+}
+
+void LoadLevel(void)
+{
+    // TODO: We need a proper file level format that we can use to load from, rather than hard coded levels.
+    gameMap.title = "0: Debug";
+    gameMap.description = "For debbugging the game";
+    gameMap.author = "Milo";
+    gameMap.spawn = Vector2{50, 50};
+    gameMap.size = Vector2{2500, 500};
+
+    gameMap.mapParts = {
+        MapPart(SLOPE, GOLD, vector<Vector2>{ {399, 119}, {399, 155}, {500, 155} }), // Slopes have to be drawn first, and slightly overlapped into other things
+        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {0, 150}, {200, 50} }),
+        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {200, 120}, {200, 50} }),
+        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 150}, {500, 50} }),
+        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 0}, {500, 50} }),
+        MapPart(RECTANGLE, RED, vector<Vector2>{ {300, 0}, {50, 50} }, unordered_map<PartAttributes, int>{ {KILL, 1} }),
+        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {-250, 200}, {200, 50} }),
+        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {-50, 150}, {25, 50} }),
+        MapPart(RECTANGLE, BLACK, vector<Vector2>{ {-85, 150}, {25, 50} }, unordered_map<PartAttributes, int>{ {LAUNCHER, -5} }),
+        MapPart(RECTANGLE, LIME, vector<Vector2>{ {-120, 150}, {25, 50} }, unordered_map<PartAttributes, int>{ {BOUNCY, 1} }),
+    };
+}
+
+void RestartLevel(void)
+{
+    int i = 0;
+    for (Player &plr : players)
+    {
+        plr.pos = Vector2Add( gameMap.spawn, {0, static_cast<float>(30*i)} );
+        plr.vel = Vector2Zero();
+        i++;
+    }
 }

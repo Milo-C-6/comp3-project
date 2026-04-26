@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.24...3.30)
-project(comp3-project)
+project(comp3-project CXX)
+set(CMAKE_CXX_STANDARD 11)
 
 include(FetchContent)
 
@@ -7,17 +8,41 @@ include(FetchContent)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Dependencies
+set(CMAKE_TLS_VERIFY false) # fricken school wifi
 set(RAYLIB_VERSION 5.5)
-set(CMAKE_TLS_VERIFY false)
-
-FetchContent_Declare(
+find_package(raylib ${RAYLIB_VERSION} QUIET) 
+if (NOT raylib_FOUND) 
+  include(FetchContent)
+  FetchContent_Declare(
     raylib
     DOWNLOAD_EXTRACT_TIMESTAMP OFF
-    URL https://github.com/raysan5/raylib/archive/refs/tags/5.5.tar.gz
-    FIND_PACKAGE_ARGS
-)
+    URL https://github.com/raysan5/raylib/archive/refs/tags/${RAYLIB_VERSION}.tar.gz
+  )
+  FetchContent_GetProperties(raylib)
+  if (NOT raylib_POPULATED) # Have we downloaded raylib yet?
+    set(FETCHCONTENT_QUIET NO)
+    FetchContent_MakeAvailable(raylib)
+    set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) 
+  endif()
+endif()
 
-FetchContent_MakeAvailable(raylib)
+set(RAYGUI_VERSION 4.0)
+find_package(raygui ${RAYGUI_VERSION} QUIET) # QUIET or REQUIRED
+if (NOT raygui_FOUND) # If there's none, fetch and build raylib
+  include(FetchContent)
+  FetchContent_Declare(
+    raygui
+    DOWNLOAD_EXTRACT_TIMESTAMP OFF
+    URL https://github.com/raysan5/raygui/archive/refs/heads/master.zip
+  )
+  FetchContent_GetProperties(raygui)
+  if (NOT raygui_POPULATED) # Have we downloaded raylib yet?
+    set(FETCHCONTENT_QUIET NO)
+    FetchContent_MakeAvailable(raygui)
+    set(BUILD_RAYGUI_EXAMPLES OFF CACHE BOOL "" FORCE) 
+    add_subdirectory(${raygui_SOURCE_DIR}/projects/CMake ${raygui_BINARY_DIR})
+  endif()
+endif()
 
 # Our Project
 add_executable(${PROJECT_NAME})
@@ -43,7 +68,7 @@ else()
 endif()
 
 #set(raylib_VERBOSE 1)
-target_link_libraries(${PROJECT_NAME} raylib)
+target_link_libraries(${PROJECT_NAME} raylib raygui)
 
 # Web Configurations
 if ("${PLATFORM}" STREQUAL "Web")
