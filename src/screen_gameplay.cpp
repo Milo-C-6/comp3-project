@@ -18,6 +18,7 @@
 **********************************************************************************************/
 
 #include "raylib.h"
+#include "raymath.h"
 #include "screens.h"
 #include "entities.hpp"
 #include "map_parts.hpp"

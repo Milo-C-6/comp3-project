@@ -74,6 +74,15 @@ void UnloadGameplayScreen(void);
 int FinishGameplayScreen(void);
 
 //----------------------------------------------------------------------------------
+// Gameplay Screen Functions Declaration
+//----------------------------------------------------------------------------------
+void InitEditorScreen(void);
+void UpdateEditorScreen(void);
+void DrawEditorScreen(void);
+void UnloadEditorScreen(void);
+int FinishEditorScreen(void);
+
+//----------------------------------------------------------------------------------
 // Ending Screen Functions Declaration
 //----------------------------------------------------------------------------------
 void InitEndingScreen(void);
