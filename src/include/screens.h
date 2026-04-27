@@ -19,6 +19,7 @@
 
 #ifndef SCREENS_H
 #define SCREENS_H
+#include "game_map.hpp"
 
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
@@ -28,6 +29,9 @@ typedef enum GameScreen { UNKNOWN = -1, LOGO = 0, TITLE, OPTIONS, GAMEPLAY, ENDI
 //----------------------------------------------------------------------------------
 // Global Variables Declaration (shared by several modules)
 //----------------------------------------------------------------------------------
+extern int screenWidth;
+extern int screenHeight;
+extern bool hasScreenResized;
 extern GameScreen currentScreen;
 extern Font font;
 extern Music music;
@@ -72,6 +76,7 @@ void UpdateGameplayScreen(void);
 void DrawGameplayScreen(void);
 void UnloadGameplayScreen(void);
 int FinishGameplayScreen(void);
+void DrawMap(GameMap gMap);
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Declaration

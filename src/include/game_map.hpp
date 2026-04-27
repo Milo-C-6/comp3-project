@@ -34,7 +34,7 @@ class GameMap
         Vector2 size;
         vector<MapPart> mapParts;
         
-        // GameMap();
+        GameMap();
 };
 
 #endif

@@ -9,7 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Dependencies
 set(CMAKE_TLS_VERIFY false) # fricken school wifi
-set(RAYLIB_VERSION 5.5)
+set(RAYLIB_VERSION 6.0)
 find_package(raylib ${RAYLIB_VERSION} QUIET) 
 if (NOT raylib_FOUND) 
   include(FetchContent)

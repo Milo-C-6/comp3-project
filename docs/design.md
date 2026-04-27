@@ -27,3 +27,15 @@ A block that becomes non-collidable after the key item is picked up
 Block that changes another block only while a player is above.
 
 
+# Editor
+
+Create and modify levels
+
+## Controls
+
+Select Mode
+Move Mode
+Copy Mode
+Delete Mode
+
+Part Select - Choose a part from a selection of parts

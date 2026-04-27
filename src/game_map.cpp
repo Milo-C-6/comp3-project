@@ -23,6 +23,12 @@
 #include <iostream>
 using namespace std;
 
+GameMap::GameMap()
+{
+    this->spawn = (Vector2){0,0};
+    this->size = (Vector2){500,500};
+}
+
 // there will eventually be a function to save and load maps but uh, i guess for now this is empty
 // or wait sorry I mean
 // TODO: Create functions to save and load maps

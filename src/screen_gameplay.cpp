@@ -28,11 +28,18 @@
 #include <unordered_map>
 
 using namespace std;
+
+//----------------------------------------------------------------------------------
+// Shared Variables Definition (global)
+// NOTE: Those variables are shared between modules through screens.h
+//----------------------------------------------------------------------------------
+// int screenWidth;
+// int screenHeight;
+// bool hasScreenResized;
+
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
 //----------------------------------------------------------------------------------
-static float screenWidth = 800; // TODO make this use the raylib_game.cpp screen sizes
-static float screenHeight = 450;
 static int framesCounter = 0;
 static int finishScreen = 0; // maybe later remove?
 static Player players[] = { Player(50, 50, KEY_A, KEY_D, KEY_W), Player(50, 80, KEY_LEFT, KEY_RIGHT, KEY_UP) };
@@ -56,6 +63,7 @@ void InitGameplayScreen(void)
     finishScreen = 0;
     // Camera
     camera.target =  players[0].pos;
+    // camera.offset = (Vector2){ static_cast<float>(screenWidth)/2.0f, static_cast<float>(screenHeight)/2.0f };
     camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
@@ -101,7 +109,7 @@ void UpdateGameplayScreen(void)
     Vector2 centerV2 = Vector2Add(minV2, Vector2Scale(widthV2, 0.5));
     camera.target = centerV2;
 
-    Vector2 zoomScaleV2 = Vector2Divide({screenWidth, screenHeight}, Vector2Max(widthV2, {screenWidth, screenHeight})); // Maps will probably have a max, so the Vector2Min will eventually be replaced with Vector2Clamp
+    Vector2 zoomScaleV2 = Vector2Divide({static_cast<float>(screenWidth), static_cast<float>(screenHeight)}, Vector2Max(widthV2, {static_cast<float>(screenWidth), static_cast<float>(screenHeight)})); // Maps will probably have a max, so the Vector2Min will eventually be replaced with Vector2Clamp
     camera.zoom = min(zoomScaleV2.x, zoomScaleV2.y);
 }
 
@@ -110,12 +118,7 @@ void DrawGameplayScreen(void)
 {
     BeginMode2D(camera);
 
-        // Draw map
-        for (MapPart part : gameMap.mapParts) 
-            if (part.partType == RECTANGLE)
-                DrawRectangle(part.points[0].x, part.points[0].y, part.points[1].x, part.points[1].y, part.color);
-            else if (part.partType == SLOPE)
-                DrawTriangle(part.points[0], part.points[1], part.points[2], part.color);
+        DrawMap(gameMap);
 
         // Draw players
         for (Player plr : players) 
@@ -123,7 +126,16 @@ void DrawGameplayScreen(void)
 
     EndMode2D();
 }
-
+void DrawMap(GameMap gMap)
+{
+    for (MapPart part : gMap.mapParts)
+    {
+        if (part.partType == RECTANGLE)
+            DrawRectangle(part.points[0].x, part.points[0].y, part.points[1].x, part.points[1].y, part.color);
+        else if (part.partType == SLOPE)
+            DrawTriangle(part.points[0], part.points[1], part.points[2], part.color);
+    }
+}
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen(void)
 {
@@ -166,7 +178,7 @@ void RestartLevel(void)
     int i = 0;
     for (Player &plr : players)
     {
-        plr.pos = Vector2Add( gameMap.spawn, {0, static_cast<float>(30*i)} );
+        plr.pos = Vector2Add( gameMap.spawn, {float(i/4*30), float(-i%4*30)} );
         plr.vel = Vector2Zero();
         i++;
     }

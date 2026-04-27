@@ -30,6 +30,9 @@
 // Shared Variables Definition (global)
 // NOTE: Those variables are shared between modules through screens.h
 //----------------------------------------------------------------------------------
+int screenWidth = 800;
+int screenHeight = 450;
+bool hasScreenResized = false;
 GameScreen currentScreen = LOGO;
 Font font = { 0 };
 Music music = { 0 };
@@ -38,8 +41,6 @@ Sound fxCoin = { 0 };
 //----------------------------------------------------------------------------------
 // Global Variables Definition (local to this module)
 //----------------------------------------------------------------------------------
-static const int screenWidth = 800;
-static const int screenHeight = 450;
 
 // Required variables to manage screen transitions (fade-in, fade-out)
 static float transAlpha = 0.0f;
@@ -66,6 +67,7 @@ int main(int argc, char *argv[])
 {
     // Initialization
     //---------------------------------------------------------
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
     InitWindow(screenWidth, screenHeight, "raylib game template");
 
     InitAudioDevice();      // Initialize audio device
@@ -99,6 +101,40 @@ int main(int argc, char *argv[])
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
+        hasScreenResized = false;
+        if (IsWindowResized() && !IsWindowFullscreen())
+        {
+            screenWidth = GetScreenWidth();
+            screenHeight = GetScreenHeight();
+            hasScreenResized = true;
+        }
+
+        // check for alt + enter or F11
+ 		if ((IsKeyPressed(KEY_ENTER) && (IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT))) || IsKeyPressed(KEY_F11))
+ 		{
+            // see what display we are on right now
+ 			int display = GetCurrentMonitor();
+ 
+            
+            if (IsWindowFullscreen())
+            {
+                // if we are full screen, then go back to the windowed size
+                SetWindowSize(screenWidth, screenHeight);
+            }
+            else
+            {
+                // if we are not full screen, set the window size to match the monitor we are on
+                SetWindowSize(GetMonitorWidth(display), GetMonitorHeight(display));
+            }
+            
+            // updat the values
+            screenWidth = GetScreenWidth();
+            screenHeight = GetScreenHeight();
+            hasScreenResized = true;
+            // toggle the state
+ 			ToggleFullscreen();
+ 		}
+
         UpdateDrawFrame();
     }
 #endif
