@@ -99,7 +99,7 @@ void InitEditorScreen(void)
     draggingBox = 0;
     selectedPart = -1;
     partInfoRect = Rectangle{float(screenWidth)-315, 150, 140, 215};
-    cPartValues[6] = { 0 };
+    fill_n(cPartValues, 6, 50);
 
     GuiSetStyle(LISTVIEW, SCROLLBAR_WIDTH, 8);
     GuiSetStyle(VALUEBOX, TEXT_PADDING, 5);
@@ -151,16 +151,21 @@ void UpdateEditorScreen(void)
             }
             
         }
-
-        // Apply partInfo box
+        goto applyPartInfo; // The previous things should only happen if the mouse button is released, but this should happen if the left or enter is released 
+    }
+    // Apply partInfo box
+    if (IsKeyReleased(KEY_ENTER))
+    {
+        applyPartInfo:
         if (selectedPart > -1)
         {
-            gameMap.mapParts.at(selectedPart).points[0].x = cPartValues[0];
-            gameMap.mapParts.at(selectedPart).points[0].y = cPartValues[1];
-            gameMap.mapParts.at(selectedPart).points[1].x = cPartValues[2];
-            gameMap.mapParts.at(selectedPart).points[1].y = cPartValues[3];
-            gameMap.mapParts.at(selectedPart).points[2].x = cPartValues[4];
-            gameMap.mapParts.at(selectedPart).points[2].y = cPartValues[5];
+            int end = 2;
+            if (gameMap.mapParts.at(selectedPart).partType == SLOPE) end = 3;
+            for (int i = 0; i < end; i++)
+            {
+                gameMap.mapParts.at(selectedPart).points[i].x = cPartValues[2*i];
+                gameMap.mapParts.at(selectedPart).points[i].y = cPartValues[2*i+1];
+            }
         }
     }
     // Apply the config
@@ -254,14 +259,15 @@ void DrawGui(void)
             GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+180, 80, 25}, "Y3:", &cPartValues[5], 0, gameMap.levelSize.y, panelInputEditIndex == 11);
         }
         
-        GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+30, 80, 25}, inputLabels[0].c_str(), &cPartValues[0], -gameMap.levelSize.x+gameMap.levelSize.x/2, gameMap.levelSize.x/2, panelInputEditIndex == 6);
-        GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+60, 80, 25}, inputLabels[1].c_str(), &cPartValues[1], -gameMap.levelSize.x+gameMap.levelSize.x/2, gameMap.levelSize.x/2, panelInputEditIndex == 7);
-        GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+90, 80, 25}, inputLabels[2].c_str(), &cPartValues[2], 0, gameMap.levelSize.x, panelInputEditIndex == 8);
-        GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+120, 80, 25}, inputLabels[3].c_str(), &cPartValues[3], 0, gameMap.levelSize.y, panelInputEditIndex == 9);
+        GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+30, 90, 25}, inputLabels[0].c_str(), &cPartValues[0], -gameMap.levelSize.x+gameMap.levelSize.x/2, gameMap.levelSize.x/2, panelInputEditIndex == 6);
+        GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+60, 90, 25}, inputLabels[1].c_str(), &cPartValues[1], -gameMap.levelSize.x+gameMap.levelSize.x/2, gameMap.levelSize.x/2, panelInputEditIndex == 7);
+        GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+90, 90, 25}, inputLabels[2].c_str(), &cPartValues[2], 0, gameMap.levelSize.x, panelInputEditIndex == 8);
+        GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+120, 90, 25}, inputLabels[3].c_str(), &cPartValues[3], 0, gameMap.levelSize.y, panelInputEditIndex == 9);
     }
 }
 int PlacePart(int partI, GameMap *gMap)
 {
+    cPartValues[0] = GetMouseX(); cPartValues[1] = GetMouseY();
     switch(partIndex)
     {
         case 0: // Rectangle
@@ -288,7 +294,11 @@ int getClickedPart(GameMap gMap)
     {
         if ((mapPart.partType == RECTANGLE && CheckCollisionPointRec(GetMousePosition(), (Rectangle){mapPart.points[0].x, mapPart.points[0].y, mapPart.points[1].x, mapPart.points[1].y}))
             || (mapPart.partType == SLOPE && CheckCollisionPointTriangle(GetMousePosition(), mapPart.points[0], mapPart.points[1], mapPart.points[2])))
+        {
+            cPartValues[0] = mapPart.points[0].x; cPartValues[1] = mapPart.points[0].y;
+            cPartValues[2] = mapPart.points[1].x; cPartValues[2] = mapPart.points[1].y;
             return counter;
+        }
         
         counter++;
     }
@@ -322,12 +332,12 @@ void CheckEditorWindows(void)
             draggingBox = 2;
         } 
         // Check keyboard input
-        if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+72, partInfoRect.y+150, 26, 25})) panelInputEditIndex = 10;
-        else if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+72, partInfoRect.y+180, 26, 25})) panelInputEditIndex = 11;
-        else if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+72, partInfoRect.y+30, 26, 25})) panelInputEditIndex = 6;
-        else if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+72, partInfoRect.y+60, 26, 25})) panelInputEditIndex = 7;
-        else if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+72, partInfoRect.y+90, 26, 25})) panelInputEditIndex = 8;
-        else if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+72, partInfoRect.y+120, 26, 25})) panelInputEditIndex = 9;
+        if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+72, partInfoRect.y+150, 36, 25})) panelInputEditIndex = 10;
+        else if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+72, partInfoRect.y+180, 36, 25})) panelInputEditIndex = 11;
+        else if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+72, partInfoRect.y+30, 36, 25})) panelInputEditIndex = 6;
+        else if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+72, partInfoRect.y+60, 36, 25})) panelInputEditIndex = 7;
+        else if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+72, partInfoRect.y+90, 36, 25})) panelInputEditIndex = 8;
+        else if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+72, partInfoRect.y+120, 36, 25})) panelInputEditIndex = 9;
     }
 }
 bool isMouseNotOverGui(void)
