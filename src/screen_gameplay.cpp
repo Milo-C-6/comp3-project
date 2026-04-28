@@ -80,7 +80,7 @@ void UpdateGameplayScreen(void)
     for (Player &plr : players)
     {   
         // Check if they're out of bounds
-        if (!CheckCollisionPointRec(plr.pos, {-gameMap.size.x/2, -gameMap.size.y/2, gameMap.size.x, gameMap.size.y}))
+        if (!CheckCollisionPointRec(plr.pos, {-gameMap.levelSize.x/2, -gameMap.levelSize.y/2, gameMap.levelSize.x, gameMap.levelSize.y}))
         {
             RestartLevel();
             return;
@@ -157,7 +157,7 @@ void LoadLevel(void)
     gameMap.description = "For debbugging the game";
     gameMap.author = "Milo";
     gameMap.spawn = Vector2{50, 50};
-    gameMap.size = Vector2{2500, 500};
+    gameMap.levelSize = Vector2{2500, 500};
 
     gameMap.mapParts = {
         MapPart(SLOPE, GOLD, vector<Vector2>{ {399, 119}, {399, 155}, {500, 155} }), // Slopes have to be drawn first, and slightly overlapped into other things
