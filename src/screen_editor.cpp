@@ -24,6 +24,7 @@
 #include "map_parts.hpp"
 #include <iostream>
 #include <vector>
+#include <algorithm>
 using namespace std;
 
 #define RAYGUI_IMPLEMENTATION
@@ -46,11 +47,15 @@ static GameMap gameMap;
 
 // Actual level editing
 static int editScroll;
-static int editMode;
+static int editMode; // 0: Place, 1: Select, 2: Move, 3: Copy, 4: Delete
 static int partScroll;
-static int partIndex;
+static int partIndex; // 0: Rectangle, 1: Slope, 2: Spawn 
 static int selectedPart;
+// Camera
 static Camera2D camera = { 0 };
+static Vector2 cameraTarg = Vector2Zero();
+static Vector2 mouseWorldPos;
+static bool isPanning;
 // GUIS
 static int configStatus;
 static bool showInfo;
@@ -65,8 +70,8 @@ static char descriptionInput[512];
 static char authorInput[64];
 static int levelWidth;
 static int levelHeight;
-static Vector2 mouseDistance;
-static int draggingBox; // 1 = Config box, 2 = Part info box
+static Vector2 mouseDistance[3];
+static int draggingBox; // 1 = Config box, 2 = Part info box, 
 
 
 //----------------------------------------------------------------------------------
@@ -77,7 +82,9 @@ static void DrawGui(void); // guess what it does :)
 static int getClickedPart(GameMap gMap); // Gets the part clicked by mouse
 static void CheckEditorWindows(void); // Make dragging/keyboard input for windows work
 static bool isMouseNotOverGui(void); // Returns bool if mouse is not over any guis
-
+static void InitialMovePart(void); // Sets the mousedistance for MapParts
+static void CopyPart(void);
+static void cameraMovements(void); // Adds camera panning and zooming
 //----------------------------------------------------------------------------------
 // Ending Screen Functions Definition
 //----------------------------------------------------------------------------------
@@ -100,6 +107,11 @@ void InitEditorScreen(void)
     selectedPart = -1;
     partInfoRect = Rectangle{float(screenWidth)-315, 150, 140, 215};
     fill_n(cPartValues, 6, 50);
+    camera.target = cameraTarg;
+    camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
+    camera.rotation = 0.0f;
+    camera.zoom = 1.0f;
+    isPanning = false;
 
     GuiSetStyle(LISTVIEW, SCROLLBAR_WIDTH, 8);
     GuiSetStyle(VALUEBOX, TEXT_PADDING, 5);
@@ -107,24 +119,43 @@ void InitEditorScreen(void)
 
 void UpdateEditorScreen(void)
 {
+    cameraMovements();
+    mouseWorldPos = Vector2Scale(Vector2Subtract(GetMousePosition(), camera.offset), 1/camera.zoom);
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) 
     {
         CheckEditorWindows();
+        InitialMovePart();
+        CopyPart();
     }
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
     {
+        Vector2 newPos = Vector2Subtract(GetMousePosition(), mouseDistance[0]);
         // Allow dragging the config box
         if (draggingBox == 1)
         {
-            Vector2 newPos = Vector2Subtract(GetMousePosition(), mouseDistance);
             messageBoxRect.x = newPos.x;
             messageBoxRect.y = newPos.y;
         }
         else if (draggingBox == 2)
         {
-            Vector2 newPos = Vector2Subtract(GetMousePosition(), mouseDistance);
             partInfoRect.x = newPos.x;
             partInfoRect.y = newPos.y;
+        }
+
+        // Dragging map parts
+        if ((editMode == 2 || editMode == 3) && selectedPart != -1)
+        {
+            if (selectedPart == -2)
+                gameMap.spawn = newPos;
+            else
+            {
+                gameMap.mapParts.at(selectedPart).points[0] = Vector2Subtract(mouseWorldPos, mouseDistance[0]);
+                if (gameMap.mapParts.at(selectedPart).partType == SLOPE)
+                {
+                    gameMap.mapParts.at(selectedPart).points[1] = Vector2Subtract(mouseWorldPos, mouseDistance[1]);
+                    gameMap.mapParts.at(selectedPart).points[2] = Vector2Subtract(mouseWorldPos, mouseDistance[2]);
+                }
+            }
         }
     }
     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
@@ -134,19 +165,23 @@ void UpdateEditorScreen(void)
         // Acutal level edits should only happen if we're pressing in the level area
         if (isMouseNotOverGui())
         {
+            if (editMode != 0 && editMode != 2)
+                selectedPart = getClickedPart(gameMap);
             switch(editMode)
             {
                 case 0: // Place mode
                     selectedPart = PlacePart(partIndex, &gameMap);
-                case 1: // Select mode
-                    selectedPart = getClickedPart(gameMap);
-                case 2: // Move mode
                     break;
+                case 2: // Move mode
                 case 3: // Copy mode
+                    selectedPart = -1;
                     break;
                 case 4: // Delete mode
+                    if (selectedPart > -1)
+                        gameMap.mapParts.erase(gameMap.mapParts.begin()+selectedPart);
+                    selectedPart = -1;
                     break;
-                default: // i really dfk what to do here
+                default: // idfk what to do here
                     break;
             }
             
@@ -181,32 +216,34 @@ void UpdateEditorScreen(void)
 
 void DrawEditorScreen(void)
 {
-    DrawMap(gameMap);
-    for (int i = 0; i < 8; i++)
-        DrawRectangle(gameMap.spawn.x+i/4*30, gameMap.spawn.y-i%4*30, 25, 25, Fade(BLUE, 0.6));
-    DrawText("Spawn", gameMap.spawn.x, gameMap.spawn.y-120, 16, BLACK);
+    BeginMode2D(camera);
+        DrawMap(gameMap);
+        for (int i = 0; i < 8; i++)
+            DrawRectangle(gameMap.spawn.x+i/4*30, gameMap.spawn.y-i%4*30, 25, 25, Fade(BLUE, 0.6));
+        DrawText("Spawn", gameMap.spawn.x, gameMap.spawn.y-120, 16, BLACK);
 
-    if (editMode == 0)
-    {
-        // Draw hologram block place
-        switch(partIndex)
+        if (editMode == 0)
         {
-            case 0: // Rectangle
-                DrawRectangle(GetMouseX(), GetMouseY(), 50, 50, Fade(ORANGE, 0.1));
-                break;
-            case 1: // Slope
-                DrawTriangle(GetMousePosition(), Vector2Add(GetMousePosition(), (Vector2){0, 50}), Vector2Add(GetMousePosition(), (Vector2){50, 50}), Fade(GOLD, 0.1));
-                break;
-            case 2: // Spawn
-                for (int i = 0; i < 8; i++)
-                    DrawRectangle(GetMouseX()+i/4*30, GetMouseY()-i%4*30, 25, 25, Fade(BLUE, 0.1));
-                DrawText("Spawn", GetMouseX(), GetMouseY()-120, 16, Fade(BLACK, 0.1));
-                break;
-            default: // idfk what to do here
-                break;
+            // Draw hologram block place
+            switch(partIndex)
+            {
+                case 0: // Rectangle
+                    DrawRectangle(mouseWorldPos.x, mouseWorldPos.y, 50, 50, Fade(ORANGE, 0.1));
+                    break;
+                case 1: // Slope
+                    DrawTriangle(mouseWorldPos, Vector2Add(mouseWorldPos, (Vector2){0, 50}), Vector2Add(mouseWorldPos, (Vector2){50, 50}), Fade(GOLD, 0.1));
+                    break;
+                case 2: // Spawn
+                    for (int i = 0; i < 8; i++)
+                        DrawRectangle(mouseWorldPos.x+i/4*30, mouseWorldPos.y-i%4*30, 25, 25, Fade(BLUE, 0.1));
+                    DrawText("Spawn", mouseWorldPos.x, mouseWorldPos.y-120, 16, Fade(BLACK, 0.1));
+                    break;
+                default: // idfk what to do here
+                    break;
+            }
         }
-    }
-
+        DrawRectangleLines(-gameMap.levelSize.x/2, -gameMap.levelSize.y/2, gameMap.levelSize.x, gameMap.levelSize.y, RED); // Map border
+    EndMode2D();
     // Draw GUI over map
     DrawGui();
 
@@ -246,7 +283,7 @@ void DrawGui(void)
         GuiSpinner((Rectangle){messageBoxRect.x+90, messageBoxRect.y+195, 200, 25}, "Height", &levelHeight, 500, 500000, panelInputEditIndex == 5);
     }
 
-    if (selectedPart != -1)
+    if (selectedPart != -1 && editMode < 2)
     {
         if (GuiWindowBox(partInfoRect, "Part info")) selectedPart = -1;
         string inputLabels[4] = {"X:", "Y:","Width:","Height:"};
@@ -255,8 +292,8 @@ void DrawGui(void)
         {
             inputLabels[0] = "X1"; inputLabels[1] = "Y1";
             inputLabels[2] = "X2"; inputLabels[3] = "Y2";
-            GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+150, 80, 25}, "X3:", &cPartValues[4], 0, gameMap.levelSize.x, panelInputEditIndex == 10);
-            GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+180, 80, 25}, "Y3:", &cPartValues[5], 0, gameMap.levelSize.y, panelInputEditIndex == 11);
+            GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+150, 90, 25}, "X3:", &cPartValues[4], 0, gameMap.levelSize.x, panelInputEditIndex == 10);
+            GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+180, 90, 25}, "Y3:", &cPartValues[5], 0, gameMap.levelSize.y, panelInputEditIndex == 11);
         }
         
         GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+30, 90, 25}, inputLabels[0].c_str(), &cPartValues[0], -gameMap.levelSize.x+gameMap.levelSize.x/2, gameMap.levelSize.x/2, panelInputEditIndex == 6);
@@ -267,17 +304,20 @@ void DrawGui(void)
 }
 int PlacePart(int partI, GameMap *gMap)
 {
-    cPartValues[0] = GetMouseX(); cPartValues[1] = GetMouseY();
+    cPartValues[0] = mouseWorldPos.x; cPartValues[1] = mouseWorldPos.y;
     switch(partIndex)
     {
         case 0: // Rectangle
-            gMap->mapParts.push_back(MapPart(RECTANGLE, ORANGE, vector<Vector2>{GetMousePosition(), (Vector2){50, 50}}));
+            gMap->mapParts.push_back(MapPart(RECTANGLE, ORANGE, vector<Vector2>{mouseWorldPos, (Vector2){50, 50}}));
+            cPartValues[2] = 50; cPartValues[3] = 50;
             return gMap->mapParts.size()-1;
         case 1: // Slope
-            gMap->mapParts.insert(gMap->mapParts.begin(), MapPart(SLOPE, ORANGE, vector<Vector2>{GetMousePosition(), Vector2Add(GetMousePosition(), (Vector2){0, 50}), Vector2Add(GetMousePosition(), (Vector2){50, 50})}));
+            gMap->mapParts.insert(gMap->mapParts.begin(), MapPart(SLOPE, ORANGE, vector<Vector2>{mouseWorldPos, Vector2Add(mouseWorldPos, (Vector2){0, 50}), Vector2Add(mouseWorldPos, (Vector2){50, 50})}));
+            cPartValues[2] = mouseWorldPos.x; cPartValues[3] = mouseWorldPos.y+50;
+            cPartValues[4] = mouseWorldPos.x+50; cPartValues[5] = mouseWorldPos.y+50;
             return 0; // since slopes go to the start
         case 2: // Spawn
-            gMap->spawn = GetMousePosition();
+            gMap->spawn = mouseWorldPos;
             return -2;
         default: // idfk what to do here
         break;
@@ -286,17 +326,22 @@ int PlacePart(int partI, GameMap *gMap)
 }
 int getClickedPart(GameMap gMap)
 {
-    if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){gMap.spawn.x, gMap.spawn.y-120, 55, 120}))
+    if (CheckCollisionPointRec(mouseWorldPos, (Rectangle){gMap.spawn.x, gMap.spawn.y-120, 55, 120}))
         return -2;
     
     int counter = 0;
     for (MapPart mapPart : gMap.mapParts)
     {
-        if ((mapPart.partType == RECTANGLE && CheckCollisionPointRec(GetMousePosition(), (Rectangle){mapPart.points[0].x, mapPart.points[0].y, mapPart.points[1].x, mapPart.points[1].y}))
-            || (mapPart.partType == SLOPE && CheckCollisionPointTriangle(GetMousePosition(), mapPart.points[0], mapPart.points[1], mapPart.points[2])))
+        if ((mapPart.partType == RECTANGLE && CheckCollisionPointRec(mouseWorldPos, (Rectangle){mapPart.points[0].x, mapPart.points[0].y, mapPart.points[1].x, mapPart.points[1].y}))
+            || (mapPart.partType == SLOPE && CheckCollisionPointTriangle(mouseWorldPos, mapPart.points[0], mapPart.points[1], mapPart.points[2])))
         {
-            cPartValues[0] = mapPart.points[0].x; cPartValues[1] = mapPart.points[0].y;
-            cPartValues[2] = mapPart.points[1].x; cPartValues[2] = mapPart.points[1].y;
+            int end = 2;
+            if (mapPart.partType == SLOPE) end = 3;
+            for (int i = 0; i < end; i++)
+            {
+                cPartValues[2*i] = mapPart.points[i].x;
+                cPartValues[2*i+1] = mapPart.points[i].y;
+            }
             return counter;
         }
         
@@ -312,7 +357,7 @@ void CheckEditorWindows(void)
         // For dragging the config box 
         if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){messageBoxRect.x, messageBoxRect.y, 375, 25}))
         {
-            mouseDistance = Vector2Subtract(GetMousePosition(), (Vector2){messageBoxRect.x, messageBoxRect.y});
+            mouseDistance[0] = Vector2Subtract(GetMousePosition(), (Vector2){messageBoxRect.x, messageBoxRect.y});
             draggingBox = 1;
         } 
         // Check keyboard input
@@ -328,7 +373,7 @@ void CheckEditorWindows(void)
         // For dragging the config box 
         if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x, partInfoRect.y, 115, 25}))
         {
-            mouseDistance = Vector2Subtract(GetMousePosition(), (Vector2){partInfoRect.x, partInfoRect.y});
+            mouseDistance[0] = Vector2Subtract(GetMousePosition(), (Vector2){partInfoRect.x, partInfoRect.y});
             draggingBox = 2;
         } 
         // Check keyboard input
@@ -344,5 +389,50 @@ bool isMouseNotOverGui(void)
 {
     return (!configStatus 
             && !CheckCollisionPointRec(GetMousePosition(), (Rectangle){0, 0, float(screenWidth), 125})
-            && !(selectedPart != -1 && CheckCollisionPointRec(GetMousePosition(), partInfoRect)));
+            && !(selectedPart != -1 && editMode < 2 && CheckCollisionPointRec(GetMousePosition(), partInfoRect)));
+}
+void InitialMovePart(void)
+{
+    if (editMode != 2)
+        return;
+    
+    selectedPart = getClickedPart(gameMap);
+
+    if (selectedPart == -1)
+        return;
+
+    MapPart sPart = gameMap.mapParts.at(selectedPart);
+    int end = 1;
+    if (sPart.partType == SLOPE) end = 3;
+    for (int i=0; i<end; i++)
+        mouseDistance[i] = Vector2Subtract(mouseWorldPos, sPart.points[i]);
+}
+void CopyPart(void)
+{
+    if (editMode != 3)
+        return;
+    int partI = getClickedPart(gameMap);
+    
+    if (partI < 0)
+        return;
+        
+    partI = gameMap.mapParts.at(partI).partType;
+    selectedPart = PlacePart(partI, &gameMap);
+}
+void cameraMovements(void)
+{
+    if (IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE))
+    {
+        isPanning = true;
+        mouseDistance[0] = Vector2Subtract(Vector2Subtract(GetMousePosition(), camera.offset), camera.offset);
+    }
+    if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE))
+    {
+        camera.offset = Vector2Subtract(Vector2Subtract(GetMousePosition(), camera.offset), mouseDistance[0]); // This makes a weird jitter effect I don't know how to fix, and also dont plan to fix
+    }
+    if (IsMouseButtonReleased(MOUSE_BUTTON_MIDDLE))
+        isPanning = false;
+
+    camera.zoom = expf(logf(camera.zoom) + ((float)GetMouseWheelMove()*0.1f)); //thanks raylib docs
+    if (camera.zoom < 0.1f) camera.zoom = 0.1f;
 }
