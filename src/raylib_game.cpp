@@ -93,6 +93,11 @@ int main(int argc, char *argv[])
             currentScreen = TITLE;
             InitTitleScreen();
         }
+        else if (argv[1] == std::string("-o"))
+        {
+            currentScreen = OPTIONS;
+            InitOptionsScreen;
+        }
     }
     else
     {

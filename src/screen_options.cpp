@@ -48,6 +48,8 @@ void UpdateOptionsScreen(void)
 void DrawOptionsScreen(void)
 {
     // TODO: Draw OPTIONS screen here!
+    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), LIGHTGRAY);
+    DrawText("OPTIONS:", 0, 0, 20, BLACK);
 }
 
 // Options Screen Unload logic
