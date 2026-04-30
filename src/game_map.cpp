@@ -26,7 +26,12 @@ using namespace std;
 GameMap::GameMap()
 {
     this->spawn = (Vector2){0,0};
-    this->size = (Vector2){500,500};
+    this->levelSize = (Vector2){500,500};
+}
+
+int GameMap::size()
+{
+    return this->mapParts.size();
 }
 
 // there will eventually be a function to save and load maps but uh, i guess for now this is empty

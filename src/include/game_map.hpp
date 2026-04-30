@@ -31,10 +31,11 @@ class GameMap
         string description;
         string author;
         Vector2 spawn;
-        Vector2 size;
+        Vector2 levelSize;
         vector<MapPart> mapParts;
         
         GameMap();
+        int size();
 };
 
 #endif
