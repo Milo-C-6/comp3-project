@@ -29,7 +29,7 @@ using namespace std;
 
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
-
+#undef RAYGUI_IMPLEMENTATION            // Avoid including raygui implementation again
 //----------------------------------------------------------------------------------
 // Shared Variables Definition (global)
 // NOTE: Those variables are shared between modules through screens.h
@@ -64,6 +64,7 @@ static Rectangle partInfoRect;
 static int panelInputEditIndex; // 1-5: Config inputs, 6-11: Part info inputs
 // Part Info
 static int cPartValues[6];
+static bool cPartChecks[5];
 // Config
 static char titleInput[64];
 static char descriptionInput[512];
@@ -105,7 +106,7 @@ void InitEditorScreen(void)
     panelInputEditIndex = 0;
     draggingBox = 0;
     selectedPart = -1;
-    partInfoRect = Rectangle{float(screenWidth)-315, 150, 140, 215};
+    partInfoRect = Rectangle{float(screenWidth)-315, 150, 280, 215};
     fill_n(cPartValues, 6, 50);
     camera.target = cameraTarg;
     camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
@@ -246,7 +247,6 @@ void DrawEditorScreen(void)
     EndMode2D();
     // Draw GUI over map
     DrawGui();
-
 }
 void UnloadEditorScreen(void)
 {
@@ -300,6 +300,16 @@ void DrawGui(void)
         GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+60, 90, 25}, inputLabels[1].c_str(), &cPartValues[1], -gameMap.levelSize.x+gameMap.levelSize.x/2, gameMap.levelSize.x/2, panelInputEditIndex == 7);
         GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+90, 90, 25}, inputLabels[2].c_str(), &cPartValues[2], 0, gameMap.levelSize.x, panelInputEditIndex == 8);
         GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+120, 90, 25}, inputLabels[3].c_str(), &cPartValues[3], 0, gameMap.levelSize.y, panelInputEditIndex == 9);
+        // Attributes
+        GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+30, 20, 20}, "Kill", &cPartChecks[0]);
+        GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+55, 20, 20}, "Bouncy", &cPartChecks[1]);
+        GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+80, 20, 20}, "Launcher", &cPartChecks[2]);
+        GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+105, 20, 20}, "Win", &cPartChecks[3]);
+        GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+130, 20, 20}, "Moving", &cPartChecks[4]);
+        GuiLabel((Rectangle){partInfoRect.x+10, partInfoRect.y+160, 55, 20}, "X Formula");
+        GuiTextBox((Rectangle){partInfoRect.x+70, partInfoRect.y+160, 200, 20}, "X Formula", 64, false);
+        GuiLabel((Rectangle){partInfoRect.x+10, partInfoRect.y+190, 55, 20}, "Y Formula");
+        GuiTextBox((Rectangle){partInfoRect.x+70, partInfoRect.y+190, 200, 20}, "Y Formula", 64, false);
     }
 }
 int PlacePart(int partI, GameMap *gMap)
