@@ -18,6 +18,7 @@
 **********************************************************************************************/
 
 #include "raylib.h"
+#include "raymath.h"
 #include "screens.h"
 
 // #define RAYGUI_IMPLEMENTATION
@@ -30,6 +31,7 @@ static int framesCounter = 0;
 static int finishScreen = 0;
 bool loadGame = false;
 bool loadEditor = false;
+static Vector2 selectionPos = {260, (screenHeight/2.0f)-20};
 //----------------------------------------------------------------------------------
 // Title Screen Functions Definition
 //----------------------------------------------------------------------------------
@@ -46,7 +48,15 @@ void InitTitleScreen(void)
 void UpdateTitleScreen(void)
 {
     // TODO: Update TITLE screen variables here!
-
+    if (IsKeyPressed(KEY_RIGHT || KEY_D))
+    {
+        selectionPos.x = 460;
+    }
+    else if (IsKeyPressed(KEY_LEFT|| KEY_A))
+    {
+        selectionPos.x = 260;
+    }
+    
     // Press enter or tap to change to GAMEPLAY screen
     if (IsKeyPressed(KEY_ENTER) || loadGame)
     {
@@ -69,8 +79,10 @@ void DrawTitleScreen(void)
     DrawTextEx(font, "COMP3-PROJECT", pos, font.baseSize*3.0f, 4, BLACK);
     DrawText("A multiplayer platforming and puzzle\n solving game by Milo and Trace!", 20, 50, 20, BLACK);
     DrawText("Created using Raylib", 20, 95, 20, BLACK);
-    loadGame = GuiButton({200, 450/2, 100, 50}, "START GAME");
-    loadEditor = GuiButton({400, 450/2, 100, 50}, "STAGE EDITOR");
+    // DrawTriangle(Vector2 {260, (screenHeight/2.0f)-20}, Vector2 {240, (screenHeight/2.0f)-20}, Vector2 {250, (screenHeight/2.0f)-10}, BLACK);
+    DrawTriangle(selectionPos, Vector2Subtract(selectionPos, Vector2 {20, 0}), Vector2Add(selectionPos, Vector2 {-10, 10}), BLACK);
+    loadGame = GuiButton({200, screenHeight/2.0f, 100, 50}, "START GAME");
+    loadEditor = GuiButton({400, screenHeight/2.0f, 100, 50}, "STAGE EDITOR");
 }
 
 // Title Screen Unload logic
