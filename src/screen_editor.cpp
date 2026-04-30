@@ -65,6 +65,14 @@ static int panelInputEditIndex; // 1-5: Config inputs, 6-11: Part info inputs
 // Part Info
 static int cPartValues[6];
 static bool cPartChecks[5];
+const PartAttributes attributes[5] = {KILL, BOUNCY, LAUNCHER, WIN, MOVING};
+static int pColorScroll = 0;
+static int colorIndex = 2;
+static char *partPosFormulas[2];
+const Color colors[21] = {
+        DARKGRAY, MAROON, ORANGE, DARKGREEN, DARKBLUE, DARKPURPLE, DARKBROWN,
+        GRAY, RED, GOLD, LIME, BLUE, VIOLET, BROWN, LIGHTGRAY, PINK, YELLOW,
+        GREEN, SKYBLUE, PURPLE, BEIGE };
 // Config
 static char titleInput[64];
 static char descriptionInput[512];
@@ -106,7 +114,7 @@ void InitEditorScreen(void)
     panelInputEditIndex = 0;
     draggingBox = 0;
     selectedPart = -1;
-    partInfoRect = Rectangle{float(screenWidth)-315, 150, 280, 215};
+    partInfoRect = Rectangle{float(screenWidth)-315, 150, 280, 255};
     fill_n(cPartValues, 6, 50);
     camera.target = cameraTarg;
     camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
@@ -127,6 +135,7 @@ void UpdateEditorScreen(void)
         CheckEditorWindows();
         InitialMovePart();
         CopyPart();
+        cout << GetMouseX() << ", " << GetMouseY() << endl;
     }
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
     {
@@ -201,6 +210,13 @@ void UpdateEditorScreen(void)
             {
                 gameMap.mapParts.at(selectedPart).points[i].x = cPartValues[2*i];
                 gameMap.mapParts.at(selectedPart).points[i].y = cPartValues[2*i+1];
+            }
+            // todo put this in the place where you put the place frrrrrriiiiccckkk
+            gameMap.mapParts.at(selectedPart).color = colors[colorIndex];
+            for (int aIndex : cPartChecks)
+            {
+                if (aIndex)
+                    gameMap.mapParts.at(selectedPart).attributes[attributes[aIndex]] = true;
             }
         }
     }
@@ -307,9 +323,11 @@ void DrawGui(void)
         GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+105, 20, 20}, "Win", &cPartChecks[3]);
         GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+130, 20, 20}, "Moving", &cPartChecks[4]);
         GuiLabel((Rectangle){partInfoRect.x+10, partInfoRect.y+160, 55, 20}, "X Formula");
-        GuiTextBox((Rectangle){partInfoRect.x+70, partInfoRect.y+160, 200, 20}, "X Formula", 64, false);
+        GuiTextBox((Rectangle){partInfoRect.x+70, partInfoRect.y+160, 200, 20}, partPosFormulas[0], 64, false);
         GuiLabel((Rectangle){partInfoRect.x+10, partInfoRect.y+190, 55, 20}, "Y Formula");
-        GuiTextBox((Rectangle){partInfoRect.x+70, partInfoRect.y+190, 200, 20}, "Y Formula", 64, false);
+        GuiTextBox((Rectangle){partInfoRect.x+70, partInfoRect.y+190, 200, 20}, partPosFormulas[1], 64, false);
+        GuiLabel((Rectangle){partInfoRect.x+10, partInfoRect.y+220, 50, 30}, "Color");
+        GuiListView((Rectangle){partInfoRect.x+60, partInfoRect.y+220, 200, 30}, "DARKGRAY;MAROON;ORANGE;DARKGREEN;DARKBLUE;DARKPURPLE;DARKBROWN;GRAY;RED;GOLD;LIME;BLUE;VIOLET;BROWN;LIGHTGRAY;PINK;YELLOW;GREEN;SKYBLUE;PURPLE;BEIGE", &pColorScroll, &colorIndex);
     }
 }
 int PlacePart(int partI, GameMap *gMap)
@@ -442,7 +460,7 @@ void cameraMovements(void)
     }
     if (IsMouseButtonReleased(MOUSE_BUTTON_MIDDLE))
         isPanning = false;
-
-    camera.zoom = expf(logf(camera.zoom) + ((float)GetMouseWheelMove()*0.1f)); //thanks raylib docs
+    if (isMouseNotOverGui())
+        camera.zoom = expf(logf(camera.zoom) + ((float)GetMouseWheelMove()*0.1f)); //thanks raylib docs
     if (camera.zoom < 0.1f) camera.zoom = 0.1f;
 }
