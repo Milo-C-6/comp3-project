@@ -20,12 +20,16 @@
 #include "raylib.h"
 #include "screens.h"
 
+// #define RAYGUI_IMPLEMENTATION
+#include "raygui.h"
+
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
 //----------------------------------------------------------------------------------
 static int framesCounter = 0;
 static int finishScreen = 0;
-
+bool loadGame = false;
+bool loadEditor = false;
 //----------------------------------------------------------------------------------
 // Title Screen Functions Definition
 //----------------------------------------------------------------------------------
@@ -44,11 +48,15 @@ void UpdateTitleScreen(void)
     // TODO: Update TITLE screen variables here!
 
     // Press enter or tap to change to GAMEPLAY screen
-    if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
+    if (IsKeyPressed(KEY_ENTER) || loadGame)
     {
         //finishScreen = 1;   // OPTIONS
         finishScreen = 2;   // GAMEPLAY
         PlaySound(fxCoin);
+    }
+    else if (loadEditor)
+    {
+        finishScreen = 3;
     }
 }
 
@@ -58,8 +66,11 @@ void DrawTitleScreen(void)
     // TODO: Draw TITLE screen here!
     DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), GREEN);
     Vector2 pos = { 20, 10 };
-    DrawTextEx(font, "TITLE SCREEN", pos, font.baseSize*3.0f, 4, DARKGREEN);
-    DrawText("PRESS ENTER or TAP to JUMP to GAMEPLAY SCREEN", 120, 220, 20, DARKGREEN);
+    DrawTextEx(font, "COMP3-PROJECT", pos, font.baseSize*3.0f, 4, BLACK);
+    DrawText("A multiplayer platforming and puzzle\n solving game by Milo and Trace!", 20, 50, 20, BLACK);
+    DrawText("Created using Raylib", 20, 95, 20, BLACK);
+    loadGame = GuiButton({200, 450/2, 100, 50}, "START GAME");
+    loadEditor = GuiButton({400, 450/2, 100, 50}, "STAGE EDITOR");
 }
 
 // Title Screen Unload logic

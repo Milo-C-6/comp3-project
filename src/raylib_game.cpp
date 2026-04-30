@@ -81,10 +81,18 @@ int main(int argc, char *argv[])
     PlayMusicStream(music);
 
     // Setup and init first screen
-    if (argc > 1 && argv[1] == std::string("-e")) 
+    if (argc > 1)
     {
-        currentScreen = EDITOR;
-        InitEditorScreen();
+        if (argv[1] == std::string("-e"))
+        {
+            currentScreen = EDITOR;
+            InitEditorScreen();
+        }
+        else if (argv[1] == std::string("-deez"))
+        {
+            currentScreen = TITLE;
+            InitTitleScreen();
+        }
     }
     else
     {
@@ -297,6 +305,7 @@ static void UpdateDrawFrame(void)
 
                 if (FinishTitleScreen() == 1) TransitionToScreen(OPTIONS);
                 else if (FinishTitleScreen() == 2) TransitionToScreen(GAMEPLAY);
+                else if (FinishTitleScreen() == 3) TransitionToScreen(EDITOR);
 
             } break;
             case OPTIONS:
