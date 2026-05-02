@@ -20,6 +20,7 @@
 #ifndef MAP_PART_HPP
 #define MAP_PART_HPP
 #include "raylib.h"
+#include <string>
 #include <vector>
 #include <unordered_map>
 
@@ -35,8 +36,11 @@ class MapPart
         Color color;
         vector<Vector2> points; // For rectangles first v2 is pos, second is width. Slopes (triangles) have 3 v2 points. *maybe a array with a set value of 3 would be better?*
         unordered_map<PartAttributes, int> attributes;
+        string formulaX;
+        string formulaY;
         
         MapPart(PartType partType, Color color, vector<Vector2> points, unordered_map<PartAttributes, int> attributes);
         MapPart(PartType partType, Color color, vector<Vector2> points);
+        void ExecuteFormulas();
 };
 #endif

@@ -108,9 +108,14 @@ void UpdateGameplayScreen(void)
     Vector2 widthV2 = Vector2Subtract(maxV2, minV2);
     Vector2 centerV2 = Vector2Add(minV2, Vector2Scale(widthV2, 0.5));
     camera.target = centerV2;
+    // camera.target = gameMap.mapParts[10].points[0];
 
     Vector2 zoomScaleV2 = Vector2Divide({static_cast<float>(screenWidth), static_cast<float>(screenHeight)}, Vector2Max(widthV2, {static_cast<float>(screenWidth), static_cast<float>(screenHeight)})); // Maps will probably have a max, so the Vector2Min will eventually be replaced with Vector2Clamp
     camera.zoom = min(zoomScaleV2.x, zoomScaleV2.y);
+
+    // Update level
+    for (MapPart &mapPart : gameMap.mapParts)
+        mapPart.ExecuteFormulas();
 }
 
 // Gameplay Screen Draw logic
@@ -170,7 +175,10 @@ void LoadLevel(void)
         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {-50, 150}, {25, 50} }),
         MapPart(RECTANGLE, BLACK, vector<Vector2>{ {-85, 150}, {25, 50} }, unordered_map<PartAttributes, int>{ {LAUNCHER, -5} }),
         MapPart(RECTANGLE, LIME, vector<Vector2>{ {-120, 150}, {25, 50} }, unordered_map<PartAttributes, int>{ {BOUNCY, 1} }),
+        MapPart(RECTANGLE, VIOLET, vector<Vector2>{ {-155, 180}, {25, 50} }, unordered_map<PartAttributes, int>{ {MOVING, 1} })
     };
+
+    gameMap.mapParts[10].formulaY = "180+20*sin(x)";
 }
 
 void RestartLevel(void)

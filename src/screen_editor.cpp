@@ -61,14 +61,16 @@ static int configStatus;
 static bool showInfo;
 static Rectangle messageBoxRect;
 static Rectangle partInfoRect;
-static int panelInputEditIndex; // 1-5: Config inputs, 6-11: Part info inputs
+static int panelInputEditIndex; // 1-5: Config inputs, 6-14: Part info inputs
 // Part Info
 static int cPartValues[6];
-static bool cPartChecks[5];
-const PartAttributes attributes[5] = {KILL, BOUNCY, LAUNCHER, WIN, MOVING};
+static bool cPartChecks[4];
+const PartAttributes attributes[4] = {KILL, BOUNCY, WIN, MOVING};
+static int cPartLauncher = 0;
 static int pColorScroll = 0;
 static int colorIndex = 2;
-static char *partPosFormulas[2];
+static char cPartFormulaX[128];
+static char cPartFormulaY[128];
 const Color colors[21] = {
         DARKGRAY, MAROON, ORANGE, DARKGREEN, DARKBLUE, DARKPURPLE, DARKBROWN,
         GRAY, RED, GOLD, LIME, BLUE, VIOLET, BROWN, LIGHTGRAY, PINK, YELLOW,
@@ -94,6 +96,7 @@ static bool isMouseNotOverGui(void); // Returns bool if mouse is not over any gu
 static void InitialMovePart(void); // Sets the mousedistance for MapParts
 static void CopyPart(void);
 static void cameraMovements(void); // Adds camera panning and zooming
+static void setCPartInfo(MapPart mapPart); // Set the CpartInfo variable to the current selected/placed object.
 //----------------------------------------------------------------------------------
 // Ending Screen Functions Definition
 //----------------------------------------------------------------------------------
@@ -114,7 +117,7 @@ void InitEditorScreen(void)
     panelInputEditIndex = 0;
     draggingBox = 0;
     selectedPart = -1;
-    partInfoRect = Rectangle{float(screenWidth)-315, 150, 280, 255};
+    partInfoRect = Rectangle{float(screenWidth)-315, 150, 295, 255};
     fill_n(cPartValues, 6, 50);
     camera.target = cameraTarg;
     camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
@@ -204,20 +207,22 @@ void UpdateEditorScreen(void)
         applyPartInfo:
         if (selectedPart > -1)
         {
+            MapPart& sPart = gameMap.mapParts.at(selectedPart);
             int end = 2;
-            if (gameMap.mapParts.at(selectedPart).partType == SLOPE) end = 3;
+            if (sPart.partType == SLOPE) end = 3;
             for (int i = 0; i < end; i++)
             {
-                gameMap.mapParts.at(selectedPart).points[i].x = cPartValues[2*i];
-                gameMap.mapParts.at(selectedPart).points[i].y = cPartValues[2*i+1];
+                sPart.points[i].x = cPartValues[2*i];
+                sPart.points[i].y = cPartValues[2*i+1];
             }
-            // todo put this in the place where you put the place frrrrrriiiiccckkk
-            gameMap.mapParts.at(selectedPart).color = colors[colorIndex];
+            sPart.color = colors[colorIndex];
             for (int aIndex : cPartChecks)
             {
                 if (aIndex)
-                    gameMap.mapParts.at(selectedPart).attributes[attributes[aIndex]] = true;
+                    sPart.attributes[attributes[aIndex]] = true;
             }
+            sPart.formulaX = (cPartFormulaX);
+            sPart.formulaY = (cPartFormulaY);
         }
     }
     // Apply the config
@@ -319,20 +324,23 @@ void DrawGui(void)
         // Attributes
         GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+30, 20, 20}, "Kill", &cPartChecks[0]);
         GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+55, 20, 20}, "Bouncy", &cPartChecks[1]);
-        GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+80, 20, 20}, "Launcher", &cPartChecks[2]);
-        GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+105, 20, 20}, "Win", &cPartChecks[3]);
-        GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+130, 20, 20}, "Moving", &cPartChecks[4]);
+        GuiSpinner((Rectangle){partInfoRect.x+200, partInfoRect.y+80, 90, 20}, "Launcher", &cPartLauncher, 0, 255, panelInputEditIndex == 12);
+        GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+105, 20, 20}, "Win", &cPartChecks[2]);
+        GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+130, 20, 20}, "Moving", &cPartChecks[3]);
         GuiLabel((Rectangle){partInfoRect.x+10, partInfoRect.y+160, 55, 20}, "X Formula");
-        GuiTextBox((Rectangle){partInfoRect.x+70, partInfoRect.y+160, 200, 20}, partPosFormulas[0], 64, false);
+        GuiTextBox((Rectangle){partInfoRect.x+70, partInfoRect.y+160, 200, 20}, cPartFormulaX, 64, panelInputEditIndex == 13);
         GuiLabel((Rectangle){partInfoRect.x+10, partInfoRect.y+190, 55, 20}, "Y Formula");
-        GuiTextBox((Rectangle){partInfoRect.x+70, partInfoRect.y+190, 200, 20}, partPosFormulas[1], 64, false);
+        GuiTextBox((Rectangle){partInfoRect.x+70, partInfoRect.y+190, 200, 20}, cPartFormulaY, 64, panelInputEditIndex == 14);
         GuiLabel((Rectangle){partInfoRect.x+10, partInfoRect.y+220, 50, 30}, "Color");
         GuiListView((Rectangle){partInfoRect.x+60, partInfoRect.y+220, 200, 30}, "DARKGRAY;MAROON;ORANGE;DARKGREEN;DARKBLUE;DARKPURPLE;DARKBROWN;GRAY;RED;GOLD;LIME;BLUE;VIOLET;BROWN;LIGHTGRAY;PINK;YELLOW;GREEN;SKYBLUE;PURPLE;BEIGE", &pColorScroll, &colorIndex);
     }
 }
 int PlacePart(int partI, GameMap *gMap)
 {
+    fill(begin(cPartChecks), begin(cPartChecks)+3, false);
     cPartValues[0] = mouseWorldPos.x; cPartValues[1] = mouseWorldPos.y;
+    colorIndex = 2;
+    // memset(&partPosFormulas,0,2);
     switch(partIndex)
     {
         case 0: // Rectangle
@@ -346,7 +354,8 @@ int PlacePart(int partI, GameMap *gMap)
             return 0; // since slopes go to the start
         case 2: // Spawn
             gMap->spawn = mouseWorldPos;
-            return -2;
+            // return -2;
+            return -1;
         default: // idfk what to do here
         break;
     }
@@ -354,8 +363,8 @@ int PlacePart(int partI, GameMap *gMap)
 }
 int getClickedPart(GameMap gMap)
 {
-    if (CheckCollisionPointRec(mouseWorldPos, (Rectangle){gMap.spawn.x, gMap.spawn.y-120, 55, 120}))
-        return -2;
+    // if (CheckCollisionPointRec(mouseWorldPos, (Rectangle){gMap.spawn.x, gMap.spawn.y-120, 55, 120}))
+    //     return -2;
     
     int counter = 0;
     for (MapPart mapPart : gMap.mapParts)
@@ -363,13 +372,7 @@ int getClickedPart(GameMap gMap)
         if ((mapPart.partType == RECTANGLE && CheckCollisionPointRec(mouseWorldPos, (Rectangle){mapPart.points[0].x, mapPart.points[0].y, mapPart.points[1].x, mapPart.points[1].y}))
             || (mapPart.partType == SLOPE && CheckCollisionPointTriangle(mouseWorldPos, mapPart.points[0], mapPart.points[1], mapPart.points[2])))
         {
-            int end = 2;
-            if (mapPart.partType == SLOPE) end = 3;
-            for (int i = 0; i < end; i++)
-            {
-                cPartValues[2*i] = mapPart.points[i].x;
-                cPartValues[2*i+1] = mapPart.points[i].y;
-            }
+            setCPartInfo(mapPart);
             return counter;
         }
         
@@ -399,7 +402,7 @@ void CheckEditorWindows(void)
     else if (selectedPart != -1 && CheckCollisionPointRec(GetMousePosition(), partInfoRect))
     {   
         // For dragging the config box 
-        if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x, partInfoRect.y, 115, 25}))
+        if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x, partInfoRect.y, 270, 25}))
         {
             mouseDistance[0] = Vector2Subtract(GetMousePosition(), (Vector2){partInfoRect.x, partInfoRect.y});
             draggingBox = 2;
@@ -411,6 +414,9 @@ void CheckEditorWindows(void)
         else if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+72, partInfoRect.y+60, 36, 25})) panelInputEditIndex = 7;
         else if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+72, partInfoRect.y+90, 36, 25})) panelInputEditIndex = 8;
         else if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+72, partInfoRect.y+120, 36, 25})) panelInputEditIndex = 9;
+        else if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+225, partInfoRect.y+80, 45, 20})) panelInputEditIndex = 12;
+        else if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+60, partInfoRect.y+160, 210, 20})) panelInputEditIndex = 13;
+        else if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){partInfoRect.x+60, partInfoRect.y+190, 210, 20})) panelInputEditIndex = 14;
     }
 }
 bool isMouseNotOverGui(void)
@@ -463,4 +469,30 @@ void cameraMovements(void)
     if (isMouseNotOverGui())
         camera.zoom = expf(logf(camera.zoom) + ((float)GetMouseWheelMove()*0.1f)); //thanks raylib docs
     if (camera.zoom < 0.1f) camera.zoom = 0.1f;
+}
+void setCPartInfo(MapPart mapPart)
+{
+    int end = 2;
+    if (mapPart.partType == SLOPE) end = 3;
+    for (int i = 0; i < end; i++)
+    {
+        cPartValues[2*i] = mapPart.points[i].x;
+        cPartValues[2*i+1] = mapPart.points[i].y;
+    }
+    // Check attributes
+    for (int i = 0; i < 4; i++)
+    {
+        if (mapPart.attributes.count(attributes[i]) > 0 && mapPart.attributes.at(attributes[i]) > 0)
+        {
+            cPartChecks[i] = 1;
+            if (attributes[i] == MOVING)
+            {
+                strcpy(cPartFormulaX, mapPart.formulaX.c_str());
+                strcpy(cPartFormulaY, mapPart.formulaY.c_str());
+            }
+        }
+
+    }
+    if (mapPart.attributes.count(LAUNCHER) > 0)
+        cPartLauncher = mapPart.attributes.at(LAUNCHER);
 }
