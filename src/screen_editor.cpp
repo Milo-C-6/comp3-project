@@ -22,9 +22,11 @@
 #include "screens.h"
 #include "game_map.hpp"
 #include "map_parts.hpp"
+#include "portable-file-dialogs.h"
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <fstream>
 using namespace std;
 
 #define RAYGUI_IMPLEMENTATION
@@ -83,7 +85,7 @@ static int levelWidth;
 static int levelHeight;
 static Vector2 mouseDistance[3];
 static int draggingBox; // 1 = Config box, 2 = Part info box, 
-
+static char sFilename[64];
 
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
@@ -97,6 +99,8 @@ static void InitialMovePart(void); // Sets the mousedistance for MapParts
 static void CopyPart(void);
 static void cameraMovements(void); // Adds camera panning and zooming
 static void setCPartInfo(MapPart mapPart); // Set the CpartInfo variable to the current selected/placed object.
+static void SaveLevel(void); // Saves level to text .cm file 
+static void LoadLevel(void); // Loads from a text .cm file
 //----------------------------------------------------------------------------------
 // Ending Screen Functions Definition
 //----------------------------------------------------------------------------------
@@ -138,7 +142,6 @@ void UpdateEditorScreen(void)
         CheckEditorWindows();
         InitialMovePart();
         CopyPart();
-        cout << GetMouseX() << ", " << GetMouseY() << endl;
     }
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
     {
@@ -289,6 +292,9 @@ void DrawGui(void)
     if (configStatus)
     {
         configStatus = GuiMessageBox(messageBoxRect, "Configuration", "", "Apply");
+
+        if (GuiButton((Rectangle){messageBoxRect.x+10, messageBoxRect.y+25, 100, 20}, "Save")) SaveLevel();
+        if (GuiButton((Rectangle){messageBoxRect.x+120, messageBoxRect.y+25, 100, 20}, "Load")) LoadLevel();
         
         GuiLabel((Rectangle){messageBoxRect.x+25, messageBoxRect.y+50, 50, 25}, "Title:");
         GuiTextBox((Rectangle){messageBoxRect.x+55, messageBoxRect.y+50, 320, 25}, titleInput, 64, panelInputEditIndex == 1);
@@ -495,4 +501,33 @@ void setCPartInfo(MapPart mapPart)
     }
     if (mapPart.attributes.count(LAUNCHER) > 0)
         cPartLauncher = mapPart.attributes.at(LAUNCHER);
+}
+
+void SaveLevel(void)
+{
+
+    auto f = pfd::save_file("Choose file to save",
+                            pfd::path::home() + pfd::path::separator() + "gamemap.cm",
+                            { "Map file (.cm)", "*.cm" },
+                            pfd::opt::force_overwrite);
+
+    ofstream gameMapFile(f.result());
+    gameMapFile << gameMap;
+    gameMapFile.close();
+}
+void LoadLevel(void)
+{
+    auto f = pfd::open_file("Choose files to read", pfd::path::home(),
+                        { "Map file (.cm)", "*.cm",
+                            "All Files", "*" },
+                        pfd::opt::none);
+
+    for (auto const &name : f.result())
+    {
+        ifstream inputGameMapFile(name);
+
+        inputGameMapFile >> gameMap;
+
+        inputGameMapFile.close();
+    }
 }

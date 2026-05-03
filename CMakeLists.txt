@@ -44,6 +44,12 @@ if (NOT raygui_FOUND) # If there's none, fetch and build raylib
   endif()
 endif()
 
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/exprtk
+  ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/portablefiledialogs
+)
+
 # Our Project
 add_executable(${PROJECT_NAME})
 add_subdirectory(src)
@@ -83,7 +89,3 @@ if (APPLE)
     target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
     target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
 endif()
-
-include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/include
-)

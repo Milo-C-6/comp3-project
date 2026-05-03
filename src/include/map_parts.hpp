@@ -41,6 +41,10 @@ class MapPart
         
         MapPart(PartType partType, Color color, vector<Vector2> points, unordered_map<PartAttributes, int> attributes);
         MapPart(PartType partType, Color color, vector<Vector2> points);
+        MapPart();
         void ExecuteFormulas();
+
+        friend ostream& operator<<(std::ostream& os, const MapPart& mapPart);
+        friend string& operator>>(string& line, MapPart& mapPart);
 };
 #endif

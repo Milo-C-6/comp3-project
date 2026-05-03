@@ -36,6 +36,9 @@ class GameMap
         
         GameMap();
         int size();
+
+        friend std::ostream& operator<<(std::ostream& os, const GameMap& gameMap);
+        friend std::ifstream& operator>>(std::ifstream& is, GameMap& gameMap);
 };
 
 #endif

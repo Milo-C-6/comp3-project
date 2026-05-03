@@ -21,6 +21,9 @@
 #include "game_map.hpp"
 #include "map_parts.hpp"
 #include <iostream>
+#include <string>
+#include <fstream>
+#include <sstream>
 using namespace std;
 
 GameMap::GameMap()
@@ -34,6 +37,69 @@ int GameMap::size()
     return this->mapParts.size();
 }
 
-// there will eventually be a function to save and load maps but uh, i guess for now this is empty
-// or wait sorry I mean
-// TODO: Create functions to save and load maps
+ostream& operator<<(ostream& os, const GameMap& gameMap)
+{
+    os << "s " << gameMap.title << endl;
+    os << "s " << gameMap.description << endl;
+    os << "s " << gameMap.author << endl;
+    os << "v " << gameMap.spawn.x << " " << gameMap.spawn.y << endl;
+    os << "v " << gameMap.levelSize.x << " " << gameMap.levelSize.y << endl;
+    for (MapPart mapPart : gameMap.mapParts)
+        os << "m " << mapPart << endl;
+    return os;
+}
+
+ifstream& operator>>(ifstream& is, GameMap& gameMap)
+{
+    gameMap.mapParts.clear();
+    int counter = 0;
+    string line;
+    while (getline(is, line))
+    {
+        istringstream iss(line);
+        char identifier;
+        iss >> identifier;
+        if (identifier == '#')
+            continue; // It's a comment, skip
+        else if (identifier == 's') 
+        {
+            switch (counter)
+            {
+                case 0:
+                    gameMap.title = line.substr(2);
+                    break;
+                case 1:
+                    gameMap.description = line.substr(2);
+                    break;
+                case 2:
+                    gameMap.author = line.substr(2);
+                    break;
+                default:
+                    break;
+            }
+        }
+        else if (identifier == 'v')
+        {
+            switch (counter)
+            {
+            case 3:
+                iss >> gameMap.spawn.x >> gameMap.spawn.y;
+                break;
+            case 4:
+                iss >> gameMap.levelSize.x >> gameMap.levelSize.y;
+                break;
+            default:
+                break;
+            }
+        }
+        else if (identifier == 'm')
+        {
+            MapPart newMP;
+            line >> newMP;
+            gameMap.mapParts.push_back(newMP);
+        }
+        counter++;
+    }
+
+    return is;
+}
