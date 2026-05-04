@@ -73,9 +73,9 @@ int main(int argc, char *argv[])
     InitAudioDevice();      // Initialize audio device
 
     // Load global data (assets that must be available in all screens, i.e. font)
-    // font = LoadFont("resources/mecha.png");
+    font = LoadFont("resources/mecha.png");
     //music = LoadMusicStream("resources/ambient.ogg"); // TODO: Load music
-    // fxCoin = LoadSound("resources/coin.wav");
+    fxCoin = LoadSound("resources/coin.wav");
 
     SetMusicVolume(music, 1.0f);
     PlayMusicStream(music);
@@ -93,6 +93,11 @@ int main(int argc, char *argv[])
             currentScreen = TITLE;
             InitTitleScreen();
         }
+        else if (argv[1] == std::string("-g"))
+        {
+            currentScreen = GAMEPLAY;
+            InitGameplayScreen();
+        }
         else if (argv[1] == std::string("-o"))
         {
             currentScreen = OPTIONS;
@@ -101,8 +106,8 @@ int main(int argc, char *argv[])
     }
     else
     {
-        currentScreen = GAMEPLAY;
-        InitGameplayScreen();
+        currentScreen = LOGO;
+        InitLogoScreen();
     }
 
 #if defined(PLATFORM_WEB)

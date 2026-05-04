@@ -109,7 +109,7 @@ static void SaveLevel(void); // Saves level to text .cm file
 static void LoadLevel(void); // Loads from a text .cm file
 static void ControlKeybinds(void); // Sets edit mode or part selection if keys are pressed.
 //----------------------------------------------------------------------------------
-// Ending Screen Functions Definition
+// Editor Screen Functions Definition
 //----------------------------------------------------------------------------------
 
 void InitEditorScreen(void)
