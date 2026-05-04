@@ -43936,6 +43936,11 @@ namespace exprtk
 
 } // namespace exprtk
 
+#if defined(_WIN32)           
+	#define NOGDI             // All GDI defines and routines
+	#define NOUSER            // All USER defines and routines
+#endif
+
 #if defined(_MSC_VER) || defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
 #   ifndef NOMINMAX
 #      define NOMINMAX
@@ -43951,6 +43956,10 @@ namespace exprtk
 #   include <sys/types.h>
 #endif
 
+#if defined(_WIN32)           // raylib uses these names as function parameters
+	#undef near
+	#undef far
+#endif
 namespace exprtk
 {
    class timer

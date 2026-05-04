@@ -19,7 +19,7 @@
 
 #include "raylib.h"
 #include "map_parts.hpp"
-// #include "exprtk.hpp"
+#include "exprtk.hpp"
 #include <vector>
 #include <unordered_map>
 #include <sstream>
@@ -48,35 +48,35 @@ MapPart::MapPart()
 
 void MapPart::ExecuteFormulas()
 {
-    // if (!this->attributes.count(MOVING) > 0)
-    //     return;
+    if (!this->attributes.count(MOVING) > 0)
+        return;
 
-    // typedef exprtk::symbol_table<float> symbol_table_t;
-    // typedef exprtk::expression<float>   expression_t;
-    // typedef exprtk::parser<float>       parser_t;
+    typedef exprtk::symbol_table<float> symbol_table_t;
+    typedef exprtk::expression<float>   expression_t;
+    typedef exprtk::parser<float>       parser_t;
 
-    // float time = GetTime();
+    float time = GetTime();
 
-    // symbol_table_t symbol_table;
-    // symbol_table.add_variable("x", time);
-    // symbol_table.add_constants();
+    symbol_table_t symbol_table;
+    symbol_table.add_variable("x", time);
+    symbol_table.add_constants();
 
-    // expression_t expression;
-    // expression.register_symbol_table(symbol_table);
+    expression_t expression;
+    expression.register_symbol_table(symbol_table);
 
-    // parser_t parser;
+    parser_t parser;
     
-    // if (!formulaX.empty())
-    // {
-    //     parser.compile(formulaX, expression);
-    //     points[0].x = expression.value();
-    // }
+    if (!formulaX.empty())
+    {
+        parser.compile(formulaX, expression);
+        points[0].x = expression.value();
+    }
 
-    // if (!formulaY.empty())
-    // {
-    //     parser.compile(formulaY, expression);
-    //     points[0].y = expression.value();
-    // }
+    if (!formulaY.empty())
+    {
+        parser.compile(formulaY, expression);
+        points[0].y = expression.value();
+    }
         
 }
 

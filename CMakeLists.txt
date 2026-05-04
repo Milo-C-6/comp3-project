@@ -44,13 +44,31 @@ if (NOT raygui_FOUND) # If there's none, fetch and build raylib
   endif()
 endif()
 
+# osdialog
+# add_library(osdialog STATIC ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/osdialog/osdialog.c)
+
+# target_include_directories(osdialog PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/osdialog)
+# if(WIN32)
+  target_sources(osdialog PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/osdialog/osdialog_win.c)
+  # target_link_libraries(osdialog PRIVATE "comdlg32")
+# elseif(APPLE)
+#   target_sources(osdialog PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/osdialog/osdialog_mac.m")
+#   target_link_libraries(osdialog PRIVATE "${APPKIT_FRAMEWORK}")
+# else()
+#   target_sources(osdialog PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/osdialog/osdialog_gtk3.c")
+#   target_link_libraries(osdialog PRIVATE PkgConfig::Gtk3)
+# endif()
+
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/src/include
   ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/exprtk
-  ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/portablefiledialogs
 )
 
 # Our Project
+if(WIN32 AND MINGW) # so we can actually build exprtk
+  set(CMAKE_CXX_FLAGS -Wa,-mbig-obj)
+endif()
+
 add_executable(${PROJECT_NAME})
 add_subdirectory(src)
 
