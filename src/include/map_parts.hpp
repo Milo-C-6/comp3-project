@@ -26,7 +26,7 @@
 
 using namespace std;
 
-typedef enum PartType { RECTANGLE, SLOPE } PartType;
+typedef enum PartType { RECTANGLE, SLOPE, MP_TEXT } PartType;
 typedef enum PartAttributes { WIN, KILL, BOUNCY, LAUNCHER, MOVING } PartAttributes;
 
 class MapPart 
@@ -38,6 +38,7 @@ class MapPart
         unordered_map<PartAttributes, int> attributes;
         string formulaX;
         string formulaY;
+        string label;
         
         MapPart(PartType partType, Color color, vector<Vector2> points, unordered_map<PartAttributes, int> attributes);
         MapPart(PartType partType, Color color, vector<Vector2> points);

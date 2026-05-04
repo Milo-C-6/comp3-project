@@ -139,6 +139,8 @@ void DrawMap(GameMap gMap)
             DrawRectangle(part.points[0].x, part.points[0].y, part.points[1].x, part.points[1].y, part.color);
         else if (part.partType == SLOPE)
             DrawTriangle(part.points[0], part.points[1], part.points[2], part.color);
+        else if (part.partType == MP_TEXT)
+            DrawText(part.label.c_str(), part.points[0].x, part.points[0].y, 16, part.color);
     }
 }
 // Gameplay Screen Unload logic

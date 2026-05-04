@@ -36,6 +36,9 @@ MapPart::MapPart(PartType partType, Color color, vector<Vector2> points)
     this->partType = partType;
     this->color = color;
     this->points = points;
+
+    if (partType == MP_TEXT)
+        this->label = "Placeholder";
 }
 MapPart::MapPart()
 {
@@ -85,14 +88,19 @@ std::ostream& operator<<(std::ostream& os, const MapPart& mapPart)
     os << mapPart.color.b << " ";
     int end = 2;
     if (mapPart.partType == SLOPE) end = 3;
+    else if (mapPart.partType == MP_TEXT) end = 1;
     for (int i = 0; i < end; i++)
     {
         os << mapPart.points[i].x << " ";
         os << mapPart.points[i].y << " ";
     }
+
     for (const auto & [key, value] : mapPart.attributes)
         os << key << ":" << value << ";";
     
+    if (mapPart.partType == MP_TEXT) 
+        os << " t\"" << mapPart.label << "\"";
+
     if (!mapPart.formulaX.empty())
     {
         os << " x\"" << mapPart.formulaX << "\"";
@@ -118,6 +126,7 @@ string& operator>>(string& line, MapPart& mapPart)
     mapPart.points.clear();
     int end = 2;
     if (mapPart.partType == SLOPE) end = 3;
+    else if (mapPart.partType == MP_TEXT) end = 1;
     for (int i = 0; i < end; i++)
     {
         Vector2 newPoint;
@@ -139,17 +148,25 @@ string& operator>>(string& line, MapPart& mapPart)
         mapPart.attributes[static_cast<PartAttributes>(stoi(key))] = stoi(value);
     }
 
+    // Get label
+    size_t pos = -1;
+    if ((pos = line.find("t\"")) != string::npos) {
+        string label = line.substr(pos+2, line.length());
+        label = label.substr(0, label.find('\"'));
+        mapPart.label = label;
+    }
+
     // Get formula
-    size_t fXPos = -1;
-    if ((fXPos = line.find("x\"")) != string::npos) {
-        string xFormula = line.substr(fXPos+2, line.length());
+    pos = -1;
+    if ((pos = line.find("x\"")) != string::npos) {
+        string xFormula = line.substr(pos+2, line.length());
         xFormula = xFormula.substr(0, xFormula.find('\"'));
         mapPart.formulaX = xFormula;
     }
 
-    size_t fYPos = -1;
-    if ((fYPos = line.find("y\"")) != string::npos) {
-        string yFormula = line.substr(fYPos+2, line.length());
+    pos = -1;
+    if ((pos = line.find("y\"")) != string::npos) {
+        string yFormula = line.substr(pos+2, line.length());
         yFormula = yFormula.substr(0, yFormula.find('\"'));
         mapPart.formulaY = yFormula;
     }

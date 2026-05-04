@@ -73,9 +73,9 @@ int main(int argc, char *argv[])
     InitAudioDevice();      // Initialize audio device
 
     // Load global data (assets that must be available in all screens, i.e. font)
-    font = LoadFont("resources/mecha.png");
+    // font = LoadFont("resources/mecha.png");
     //music = LoadMusicStream("resources/ambient.ogg"); // TODO: Load music
-    fxCoin = LoadSound("resources/coin.wav");
+    // fxCoin = LoadSound("resources/coin.wav");
 
     SetMusicVolume(music, 1.0f);
     PlayMusicStream(music);
