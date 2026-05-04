@@ -36,6 +36,7 @@ static int menu = 1; // 1: Main screen, 2: Play sub menu
 static int buttonPressed = 0; // 1: Play game, 2: Editor, 3: Local, 4: Online
 static Rectangle loadGameRec = {200, screenHeight/2.0f, 100, 50};
 static Rectangle loadEditorRec = {400, screenHeight/2.0f, 100, 50};
+static Rectangle backButtonRec = {screenWidth-100.0f, 0, 100, 50};
 static Vector2 selectionPos = {260, (screenHeight/2.0f)-20};
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
@@ -92,6 +93,8 @@ void DrawTitleScreen(void)
     {
         if (GuiButton(loadGameRec, "LOCAL")) buttonPressed = 3;
         else if (GuiButton({400, screenHeight/2.0f, 100, 50}, "ONLINE")) buttonPressed = 4;
+
+        if (GuiButton(backButtonRec, "BACK")) menu = 1;
     }
 }
 
