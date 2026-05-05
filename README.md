@@ -35,7 +35,10 @@ Currently running it will just load the gameplay screen, however you can add `-e
 
  - [Milo](https://github.com/Milo-C-6)
  - [Trace](https://github.com/CoolGuyTrace)
+
  - [@raysan5](https://github.com/raysan5) - for making raylib & raygui <3
+ - [@ArashPartow](https://github.com/ArashPartow) - for the (exprtk)[https://github.com/ArashPartow/exprtk] library
+ - [@AndrewBelt](https://github.com/AndrewBelt) - for the (osdialog)[https://github.com/AndrewBelt/osdialog] library
 
 ### Links
 

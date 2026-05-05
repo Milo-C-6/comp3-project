@@ -22,7 +22,7 @@
 #include "screens.h"
 #include "game_map.hpp"
 #include "map_parts.hpp"
-// #include "osdialog/osdialog.h"
+#include "osdialog.h"
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -586,28 +586,31 @@ void setCPartInfo(MapPart mapPart)
 
 void SaveLevel(void)
 {
-    // auto f = pfd::save_file("Choose file to save",
-    //                         pfd::path::home() + pfd::path::separator() + "gamemap.cm",
-    //                         { "Map file (.cm)", "*.cm" },
-    //                         pfd::opt::force_overwrite);
+    osdialog_filters* filters = osdialog_filters_parse("Map file:.cm");
 
-    // ofstream gameMapFile(f.result());
-    // gameMapFile << gameMap;
-    // gameMapFile.close();
+    char* filename = osdialog_file(OSDIALOG_SAVE, NULL, "gamemap.cm", filters);
+
+    if (filename)
+    {
+        ofstream gameMapFile(filename);
+        gameMapFile << gameMap;
+        gameMapFile.close();
+        free(filename);
+    }
+    osdialog_filters_free(filters);
 }
 void LoadLevel(void)
 {
-    // auto f = pfd::open_file("Choose files to read", pfd::path::home(),
-    //                     { "Map file (.cm)", "*.cm",
-    //                         "All Files", "*" },
-    //                     pfd::opt::none);
+    osdialog_filters* filters = osdialog_filters_parse("Map file:.cm");
 
-    // for (auto const &name : f.result())
-    // {
-    //     ifstream inputGameMapFile(name);
+    char* filename = osdialog_file(OSDIALOG_OPEN, NULL, NULL, filters);
 
-    //     inputGameMapFile >> gameMap;
-
-    //     inputGameMapFile.close();
-    // }
+    if (filename)
+    {
+        ifstream inputGameMapFile(filename);
+        inputGameMapFile >> gameMap;
+        inputGameMapFile.close();
+        free(filename);
+    }
+    osdialog_filters_free(filters);
 }

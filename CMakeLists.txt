@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24...3.30)
-project(comp3-project CXX)
+project(comp3-project C CXX)
 set(CMAKE_CXX_STANDARD 23)
 
 include(FetchContent)
@@ -8,6 +8,16 @@ include(FetchContent)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Dependencies
+find_package(PkgConfig)
+if(WIN32)
+  elseif(APPLE)
+    find_library(APPKIT_FRAMEWORK "AppKit")
+  else()
+    pkg_check_modules(Gtk3 "gtk+-3.0" REQUIRED IMPORTED_TARGET)
+
+  endif()
+
+
 set(CMAKE_TLS_VERIFY false) # fricken school wifi
 set(RAYLIB_VERSION 6.0)
 find_package(raylib ${RAYLIB_VERSION} QUIET) 
@@ -45,19 +55,19 @@ if (NOT raygui_FOUND) # If there's none, fetch and build raylib
 endif()
 
 # osdialog
-# add_library(osdialog STATIC ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/osdialog/osdialog.c)
+add_library(osdialog STATIC ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/osdialog/osdialog.c)
 
-# target_include_directories(osdialog PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/osdialog)
-# if(WIN32)
+target_include_directories(osdialog PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/osdialog)
+if(WIN32)
   target_sources(osdialog PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/osdialog/osdialog_win.c)
-  # target_link_libraries(osdialog PRIVATE "comdlg32")
-# elseif(APPLE)
-#   target_sources(osdialog PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/osdialog/osdialog_mac.m")
-#   target_link_libraries(osdialog PRIVATE "${APPKIT_FRAMEWORK}")
-# else()
-#   target_sources(osdialog PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/osdialog/osdialog_gtk3.c")
-#   target_link_libraries(osdialog PRIVATE PkgConfig::Gtk3)
-# endif()
+  target_link_libraries(osdialog PRIVATE "comdlg32")
+elseif(APPLE)
+  target_sources(osdialog PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/osdialog/osdialog_mac.m)
+  target_link_libraries(osdialog PRIVATE "${APPKIT_FRAMEWORK}")
+else()
+  target_sources(osdialog PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/osdialog/osdialog_gtk.c)
+  target_link_libraries(osdialog PRIVATE PkgConfig::Gtk3)
+endif()
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/src/include
@@ -92,7 +102,7 @@ else()
 endif()
 
 #set(raylib_VERBOSE 1)
-target_link_libraries(${PROJECT_NAME} raylib raygui)
+target_link_libraries(${PROJECT_NAME} raylib raygui osdialog)
 
 # Web Configurations
 if ("${PLATFORM}" STREQUAL "Web")
