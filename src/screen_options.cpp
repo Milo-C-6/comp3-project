@@ -20,12 +20,17 @@
 #include "raylib.h"
 #include "screens.h"
 
+// #define RAYGUI_IMPLEMENTATION
+#include "raygui.h"
+
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
 //----------------------------------------------------------------------------------
 static int framesCounter = 0;
 static int finishScreen = 0;
-
+static Rectangle backButtonRec = {screenWidth-100.0f, 0, 100, 50};
+static Rectangle controlsRec = {0, 20, 120, 40};
+bool windowControlsActive = false;
 //----------------------------------------------------------------------------------
 // Options Screen Functions Definition
 //----------------------------------------------------------------------------------
@@ -50,6 +55,18 @@ void DrawOptionsScreen(void)
     // TODO: Draw OPTIONS screen here!
     DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), LIGHTGRAY);
     DrawText("OPTIONS:", 0, 0, 20, BLACK);
+    if (GuiButton(backButtonRec, "BACK"));
+
+    if (GuiButton(controlsRec, "EDIT CONTROLS")) windowControlsActive = true;
+
+    if (windowControlsActive)
+    {
+        if (GuiWindowBox({0, controlsRec.y+40, 120, 93}, "CONTROLS:")) windowControlsActive = false;
+        GuiButton((Rectangle){0, controlsRec.y+63, 120, 24 }, "MOVE LEFT"); 
+        GuiButton((Rectangle){0, controlsRec.y+86, 120, 24 }, "MOVE RIGHT"); 
+        GuiButton((Rectangle){0, controlsRec.y+109, 120, 24 }, "JUMP"); 
+    }
+    
 }
 
 // Options Screen Unload logic
