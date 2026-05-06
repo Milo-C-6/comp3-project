@@ -58,7 +58,6 @@ static int partIndex; // 0: Rectangle, 1: Slope, 2: Text, 3: Spawn
 static int selectedPart;
 // Camera
 static Camera2D camera = { 0 };
-static Vector2 cameraTarg = Vector2Zero();
 static Vector2 mouseWorldPos;
 static bool isPanning;
 // GUIS
@@ -90,6 +89,9 @@ static int levelHeight;
 static Vector2 mouseDistance[3];
 static int draggingBox; // 1 = Config box, 2 = Part info box, 
 static char sFilename[64];
+// Testing
+static bool testing;
+static vector<Player> players = { Player(50, 50, KEY_A, KEY_D, KEY_W), Player(50, 80, KEY_LEFT, KEY_RIGHT, KEY_UP) };
 
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
@@ -108,6 +110,8 @@ static void setCPartInfo(MapPart mapPart); // Set the CpartInfo variable to the 
 static void SaveLevel(void); // Saves level to text .cm file 
 static void LoadLevel(void); // Loads from a text .cm file
 static void ControlKeybinds(void); // Sets edit mode or part selection if keys are pressed.
+static void InitTesting(void); // Begin testing the level with players and camera
+static void FinishTesting(void); // Reset camera values and stop testing with players
 //----------------------------------------------------------------------------------
 // Editor Screen Functions Definition
 //----------------------------------------------------------------------------------
@@ -130,18 +134,25 @@ void InitEditorScreen(void)
     selectedPart = -1;
     partInfoRect = Rectangle{float(screenWidth)-315, 150, 295, 315};
     fill_n(cPartValues, 6, 50);
-    camera.target = cameraTarg;
+    camera.target = Vector2Zero();
     camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
     isPanning = false;
+    testing = false;
 
     GuiSetStyle(LISTVIEW, SCROLLBAR_WIDTH, 8);
     GuiSetStyle(VALUEBOX, TEXT_PADDING, 5);
+    GuiEnableTooltip();
 }
 
 void UpdateEditorScreen(void)
 {
+    if (testing)
+    {
+        UpdateLevel(&gameMap, &players, &camera);
+        return;
+    }
     cameraMovements();
     ControlKeybinds();
     mouseWorldPos = Vector2Scale(Vector2Subtract(GetMousePosition(), camera.offset), 1/camera.zoom);
@@ -237,11 +248,11 @@ void UpdateEditorScreen(void)
                 sPart.points[i].y = cPartValues[2*i+1];
             }
             sPart.color = colors[colorIndex];
-            for (int aIndex : cPartChecks)
-            {
-                if (aIndex)
-                    sPart.attributes[attributes[aIndex]] = true;
-            }
+            for (int aIndex = 0; aIndex < 4; aIndex++)
+                if (cPartChecks[aIndex])
+                    sPart.attributes[attributes[aIndex]] = 1;
+            if (cPartLauncher != 0)
+                sPart.attributes[LAUNCHER] = cPartLauncher;
             sPart.formulaX = cPartFormulaX;
             sPart.formulaY = cPartFormulaY;
         }
@@ -260,6 +271,11 @@ void DrawEditorScreen(void)
 {
     BeginMode2D(camera);
         DrawMap(gameMap);
+
+        if (testing)
+            for (Player plr : players) 
+                DrawRectangle(plr.pos.x, plr.pos.y, 25, 25, BLUE);
+
         for (int i = 0; i < 8; i++)
             DrawRectangle(gameMap.spawn.x+i/4*30, gameMap.spawn.y-i%4*30, 25, 25, Fade(BLUE, 0.6));
         DrawText("Spawn", gameMap.spawn.x, gameMap.spawn.y-120, 16, BLACK);
@@ -320,14 +336,31 @@ void DrawMainPanel(void)
     // Edit mode
     GuiSetTooltip("Edit modes: Select, Place, Move, Copy, Remove");
     GuiToggleGroup((Rectangle){122, 8, 24, 24}, "#21#;#23#;#67#;#16#;#143#", &editMode);
-    // Part mode 
-    GuiSetTooltip("Part selection: Rectangle, Slope, Text, Spawn");
-    GuiToggleGroup((Rectangle){280, 8, 24, 24}, "#80#;#220#;#31#;#142#", &partIndex);
+    
+    if (!testing)
+    {
+        // Part mode 
+        GuiSetTooltip("Part selection: Rectangle, Slope, Text, Spawn");
+        GuiToggleGroup((Rectangle){280, 8, 24, 24}, "#80#;#220#;#31#;#142#", &partIndex);
+        GuiSetTooltip("Start testing the level");
+        if (GuiButton((Rectangle){float(screenWidth-32), 8, 24, 24}, "#131#")) InitTesting();
+    }
+    else
+    {
+        // Part mode 
+        GuiSetTooltip("Add player");
+        if (GuiButton((Rectangle){280, 8, 24, 24}, "#150#")) players.push_back(Player(gameMap.spawn.x, gameMap.spawn.y, KEY_F, KEY_H, KEY_T));
+        GuiSetTooltip("Remove player");
+        if (GuiButton((Rectangle){306, 8, 24, 24}, "#147#")) players.pop_back();
+        GuiSetTooltip("Stop testing");
+        if (GuiButton((Rectangle){float(screenWidth-32), 8, 24, 24}, "#133#")) FinishTesting();
+    }
+
     GuiSetTooltip(NULL);
     
     // Set level height and width
-    if (GuiSpinner((Rectangle){468, 8, 120, 24}, "Level Width:", &levelWidth, 500, 500000, inputSelection == 4)) inputSelection = 4;
-    if (GuiSpinner((Rectangle){648, 8, 120, 24}, "Height:", &levelHeight, 500, 500000, inputSelection == 5)) inputSelection = 5;
+    if (GuiSpinner((Rectangle){458, 8, 120, 24}, "Level Width:", &levelWidth, 500, 500000, inputSelection == 4)) inputSelection = 4;
+    if (GuiSpinner((Rectangle){630, 8, 120, 24}, "Height:", &levelHeight, 500, 500000, inputSelection == 5)) inputSelection = 5;
 }
 void DrawSavePanel(void)
 {
@@ -368,7 +401,7 @@ void DrawPartPanel(void)
         // Attributes
         GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+30, 20, 20}, "Kill", &cPartChecks[0]);
         GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+55, 20, 20}, "Bouncy", &cPartChecks[1]);
-        GuiSpinner((Rectangle){partInfoRect.x+200, partInfoRect.y+80, 90, 20}, "Launcher", &cPartLauncher, 0, 255, inputSelection == 12);
+        GuiSpinner((Rectangle){partInfoRect.x+200, partInfoRect.y+80, 90, 20}, "Launcher", &cPartLauncher, -256, 256, inputSelection == 12);
         GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+105, 20, 20}, "Win", &cPartChecks[2]);
     }
     else
@@ -386,10 +419,14 @@ void DrawPartPanel(void)
 }
 int PlacePart(int partI, GameMap *gMap)
 {
-    fill(begin(cPartChecks), begin(cPartChecks)+3, false);
+    // Reset cPart values
+    fill(begin(cPartChecks), begin(cPartChecks)+4, false);
+    cPartLauncher = 0;
     cPartValues[0] = mouseWorldPos.x; cPartValues[1] = mouseWorldPos.y;
+    memset(cPartFormulaX, 0, sizeof(cPartFormulaX));
+    memset(cPartFormulaY, 0, sizeof(cPartFormulaY));
     colorIndex = 2;
-    // memset(&partPosFormulas,0,2);
+    // Place based on what part is chosen
     switch(partIndex)
     {
         case 0: // Rectangle
@@ -416,10 +453,7 @@ int PlacePart(int partI, GameMap *gMap)
     return -1;
 }
 int getClickedPart(GameMap gMap)
-{
-    // if (CheckCollisionPointRec(mouseWorldPos, (Rectangle){gMap.spawn.x, gMap.spawn.y-120, 55, 120}))
-    //     return -2;
-    
+{    
     int counter = 0;
     for (MapPart mapPart : gMap.mapParts)
     {
@@ -569,17 +603,26 @@ void setCPartInfo(MapPart mapPart)
     {
         if (mapPart.attributes.count(attributes[i]) > 0 && mapPart.attributes.at(attributes[i]) > 0)
         {
-            cPartChecks[i] = 1;
-            if (attributes[i] == MOVING)
-            {
-                strcpy(cPartFormulaX, mapPart.formulaX.c_str());
-                strcpy(cPartFormulaY, mapPart.formulaY.c_str());
-            }
+            cPartChecks[i] = true;
         }
-
+        else
+            cPartChecks[i] = false;
     }
     if (mapPart.attributes.count(LAUNCHER) > 0)
         cPartLauncher = mapPart.attributes.at(LAUNCHER);
+    else
+        cPartLauncher = 0;
+
+    if (!mapPart.formulaX.empty())
+        strcpy(cPartFormulaX, mapPart.formulaX.c_str());
+    else
+        memset(cPartFormulaX, 0, sizeof(cPartFormulaX));
+
+    if (!mapPart.formulaY.empty())
+        strcpy(cPartFormulaY, mapPart.formulaY.c_str());
+    else
+        memset(cPartFormulaY, 0, sizeof(cPartFormulaY));
+
     for (int i=0; i < 22; i++) // why tf can I not compare Color == Color :sob:
         if (colors[i].r == mapPart.color.r && colors[i].g == mapPart.color.g && colors[i].b == mapPart.color.b) colorIndex = i;
 }
@@ -613,4 +656,22 @@ void LoadLevel(void)
         free(filename);
     }
     osdialog_filters_free(filters);
+}
+void InitTesting(void)
+{
+    testing = true;
+    camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
+    RestartLevel(&gameMap, &players);
+    // Gui edits
+    GuiSetStyle(DEFAULT, BACKGROUND_COLOR, 0xf4d0d0ff);
+    GuiSetStyle(DEFAULT, BORDER_COLOR_NORMAL, 0xfd2828ff);
+    GuiSetStyle(DEFAULT, BASE_COLOR_NORMAL, 0xfeafafff);
+}
+void FinishTesting(void)
+{
+    testing = false;
+    camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
+    camera.target = Vector2Zero();
+    // Reset gui style
+   GuiLoadStyleDefault();
 }

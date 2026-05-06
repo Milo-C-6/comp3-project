@@ -20,6 +20,8 @@
 #ifndef SCREENS_H
 #define SCREENS_H
 #include "game_map.hpp"
+#include "entities.hpp"
+#include <vector>
 
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
@@ -86,6 +88,8 @@ void UpdateEditorScreen(void);
 void DrawEditorScreen(void);
 void UnloadEditorScreen(void);
 int FinishEditorScreen(void);
+void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d);
+void RestartLevel(GameMap *gMap, vector<Player> *plrs);
 
 //----------------------------------------------------------------------------------
 // Ending Screen Functions Declaration

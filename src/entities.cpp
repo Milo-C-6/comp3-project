@@ -42,7 +42,9 @@ void Player::UpdatePosition()
 }
 bool Player::CheckCollision(MapPart part) 
 {
-    // TODO: Make the player *glide* on the slope, rather than just simple triangle collision
+    if (part.attributes.count(WIN) > 0 && part.attributes.at(WIN) > 0)
+        return false;
+
     bool yCollide = false;
     bool xCollide = false;
 

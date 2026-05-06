@@ -42,7 +42,8 @@ using namespace std;
 //----------------------------------------------------------------------------------
 static int framesCounter = 0;
 static int finishScreen = 0; // maybe later remove?
-static Player players[] = { Player(50, 50, KEY_A, KEY_D, KEY_W), Player(50, 80, KEY_LEFT, KEY_RIGHT, KEY_UP) };
+// static Player players[] = { Player(50, 50, KEY_A, KEY_D, KEY_W), Player(50, 80, KEY_LEFT, KEY_RIGHT, KEY_UP) };
+static vector<Player> players = { Player(50, 50, KEY_A, KEY_D, KEY_W), Player(50, 80, KEY_LEFT, KEY_RIGHT, KEY_UP) };
 static GameMap gameMap;
 static Camera2D camera = { 0 };
 
@@ -50,7 +51,7 @@ static Camera2D camera = { 0 };
 // Module Functions Declaration
 //----------------------------------------------------------------------------------
 static void LoadLevel(void);  // Create the variables for the gameMap
-static void RestartLevel(void);  // Move players to spawn of level, and reset any moving parts back to original place.
+// void RestartLevel(GameMap gMap, vector<Player> *plrs);  // Move players to spawn of level, and reset any moving parts back to original place.
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
@@ -73,49 +74,7 @@ void InitGameplayScreen(void)
 // Gameplay Screen Update logic
 void UpdateGameplayScreen(void)
 {
-    // Update camera
-    Vector2 minV2 = camera.target;
-    Vector2 maxV2 = camera.target;
-
-    for (Player &plr : players)
-    {   
-        // Check if they're out of bounds
-        if (!CheckCollisionPointRec(plr.pos, {-gameMap.levelSize.x/2, -gameMap.levelSize.y/2, gameMap.levelSize.x, gameMap.levelSize.y}))
-        {
-            RestartLevel();
-            return;
-        }
-
-        minV2 = Vector2Min(minV2, Vector2AddValue(plr.pos, -10));
-        maxV2 = Vector2Max(maxV2, Vector2AddValue(plr.pos, 35));
-        // Update players
-        plr.CheckControls();
-
-        // Handle collision
-        // for (Player plr2 : players)
-        // {
-        //     if (plr == plr2)
-        //         continue;
-        //     plr.checkCollision()
-        // }
-        for (MapPart part : gameMap.mapParts)
-            if (plr.CheckCollision(part) && part.attributes.count(KILL))
-                RestartLevel();
-        plr.UpdatePosition();
-    }
-
-    // Make sure camera encompasses all players
-    Vector2 widthV2 = Vector2Subtract(maxV2, minV2);
-    Vector2 centerV2 = Vector2Add(minV2, Vector2Scale(widthV2, 0.5));
-    camera.target = centerV2;
-    // camera.target = gameMap.mapParts[10].points[0];
-
-    Vector2 zoomScaleV2 = Vector2Divide({static_cast<float>(screenWidth), static_cast<float>(screenHeight)}, Vector2Max(widthV2, {static_cast<float>(screenWidth), static_cast<float>(screenHeight)})); // Maps will probably have a max, so the Vector2Min will eventually be replaced with Vector2Clamp
-    camera.zoom = min(zoomScaleV2.x, zoomScaleV2.y);
-
-    // Update level
-    for (MapPart &mapPart : gameMap.mapParts)
-        mapPart.ExecuteFormulas();
+    UpdateLevel(&gameMap, &players, &camera);
 }
 
 // Gameplay Screen Draw logic
@@ -183,12 +142,58 @@ void LoadLevel(void)
     gameMap.mapParts[10].formulaY = "180+20*sin(x)";
 }
 
-void RestartLevel(void)
+void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
+{
+    // Update camera
+    Vector2 minV2 = cam2d->target;
+    Vector2 maxV2 = cam2d->target;
+
+    for (Player &plr : *plrs)
+    {   
+        // Check if they're out of bounds
+        if (!CheckCollisionPointRec(plr.pos, {-gMap->levelSize.x/2, -gMap->levelSize.y/2, gMap->levelSize.x, gMap->levelSize.y}))
+        {
+            RestartLevel(gMap, plrs);
+            return;
+        }
+
+        minV2 = Vector2Min(minV2, Vector2AddValue(plr.pos, -10));
+        maxV2 = Vector2Max(maxV2, Vector2AddValue(plr.pos, 35));
+        // Update players
+        plr.CheckControls();
+
+        // Handle collision
+        // for (Player plr2 : players)
+        // {
+        //     if (plr == plr2)
+        //         continue;
+        //     plr.checkCollision()
+        // }
+        for (MapPart part : gMap->mapParts)
+            if (plr.CheckCollision(part) && part.attributes.count(KILL))
+                RestartLevel(gMap, plrs);
+        plr.UpdatePosition();
+    }
+
+    // Make sure camera encompasses all players
+    Vector2 widthV2 = Vector2Subtract(maxV2, minV2);
+    Vector2 centerV2 = Vector2Add(minV2, Vector2Scale(widthV2, 0.5));
+    cam2d->target = centerV2;
+
+    Vector2 zoomScaleV2 = Vector2Divide({static_cast<float>(screenWidth), static_cast<float>(screenHeight)}, Vector2Max(widthV2, {static_cast<float>(screenWidth), static_cast<float>(screenHeight)})); // Maps will probably have a max, so the Vector2Min will eventually be replaced with Vector2Clamp
+    cam2d->zoom = min(zoomScaleV2.x, zoomScaleV2.y);
+
+    // Update level
+    for (MapPart &mapPart : gMap->mapParts)
+        mapPart.ExecuteFormulas();
+}
+
+void RestartLevel(GameMap *gMap, vector<Player> *plrs)
 {
     int i = 0;
-    for (Player &plr : players)
+    for (Player &plr : *plrs)
     {
-        plr.pos = Vector2Add( gameMap.spawn, {float(i/4*30), float(-i%4*30)} );
+        plr.pos = Vector2Add(gMap->spawn, {float(i/4*30), float(-i%4*30)} );
         plr.vel = Vector2Zero();
         i++;
     }
