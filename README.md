@@ -28,20 +28,14 @@ _TODO: Show your game to the world, animated GIFs recommended!._
 4. Build
     1. `cmake --build build`
 
-Executable file will be in  (`../build/${PROJECT_NAME}/${PROJECT_NAME}`)
-Currently running it will just load the gameplay screen, however you can add `-e` to the end to launch the editor.
+Executable file will be in  (`../build/comp3-project/comp3-project.exe`)
+You can add `-e` to skip to the editor, `-g` for gameplay, `-deez` to skip the logo screen straight to the main menu, and `-o` for the options.
 
 ## Credits
 
  - [Milo](https://github.com/Milo-C-6)
  - [Trace](https://github.com/CoolGuyTrace)
 
- - [@raysan5](https://github.com/raysan5) - for making raylib & raygui <3
- - [@ArashPartow](https://github.com/ArashPartow) - for the (exprtk)[https://github.com/ArashPartow/exprtk] library
- - [@AndrewBelt](https://github.com/AndrewBelt) - for the (osdialog)[https://github.com/AndrewBelt/osdialog] library
-
-### Links
-
- - YouTube Gameplay: $(YouTube Link)
- - itch.io Release: $(itch.io Game Page)
- - Steam Release: $(Steam Game Page)
+ - [@raysan5](https://github.com/raysan5) - for making [raylib](https://github.com/raysan5/raylib) & [raygui](https://github.com/raysan5/raygui) <3
+ - [@ArashPartow](https://github.com/ArashPartow) - for the [exprtk](https://github.com/ArashPartow/exprtk) library
+ - [@AndrewBelt](https://github.com/AndrewBelt) - for the [osdialog](https://github.com/AndrewBelt/osdialog) library
