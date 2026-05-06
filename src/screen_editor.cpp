@@ -586,7 +586,7 @@ void setCPartInfo(MapPart mapPart)
 
 void SaveLevel(void)
 {
-    osdialog_filters* filters = osdialog_filters_parse("Map file:.cm");
+    osdialog_filters* filters = osdialog_filters_parse("Map file (*.cm):cm;All files (*.*):*");
 
     char* filename = osdialog_file(OSDIALOG_SAVE, NULL, "gamemap.cm", filters);
 
@@ -601,7 +601,7 @@ void SaveLevel(void)
 }
 void LoadLevel(void)
 {
-    osdialog_filters* filters = osdialog_filters_parse("Map file:.cm");
+    osdialog_filters* filters = osdialog_filters_parse("Map file (*.cm):cm;All files (*.*):*");
 
     char* filename = osdialog_file(OSDIALOG_OPEN, NULL, NULL, filters);
 
