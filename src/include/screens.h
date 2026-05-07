@@ -38,6 +38,7 @@ extern GameScreen currentScreen;
 extern Font font;
 extern Music music;
 extern Sound fxCoin;
+extern bool online;
 
 #ifdef __cplusplus
 extern "C" {            // Prevents name mangling of functions
@@ -55,7 +56,7 @@ int FinishLogoScreen(void);
 //----------------------------------------------------------------------------------
 // Title Screen Functions Declaration
 //----------------------------------------------------------------------------------
-void InitTitleScreen(void);
+void InitTitleScreen(int imenu);
 void UpdateTitleScreen(void);
 void DrawTitleScreen(void);
 void UnloadTitleScreen(void);
@@ -81,7 +82,7 @@ int FinishGameplayScreen(void);
 void DrawMap(GameMap gMap);
 
 //----------------------------------------------------------------------------------
-// Gameplay Screen Functions Declaration
+// Editor Screen Functions Declaration
 //----------------------------------------------------------------------------------
 void InitEditorScreen(void);
 void UpdateEditorScreen(void);

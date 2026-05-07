@@ -41,18 +41,18 @@ static Vector2 selectionPos = {260, (screenHeight/2.0f)-20};
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
 //----------------------------------------------------------------------------------
-static void UpdateMainScreen(void); // Updates variables for before any selections with sub menus are chosen
-static void UpdatePlayScreen(void); // Updates variables for the play sub menu
+static void UpdateMainMenus(void); // Updates variables for before any selections with sub menus are chosen
+static void DrawPlayerSelect(void); // Draws the player select screen, for adding players and setting their color
 //----------------------------------------------------------------------------------
 // Title Screen Functions Definition
 //----------------------------------------------------------------------------------
 // Title Screen Initialization logic
-void InitTitleScreen(void)
+void InitTitleScreen(int imenu)
 {
     framesCounter = 0;
     finishScreen = 0;
     buttonPressed = 0;
-    menu = 1;
+    menu = imenu;
 }
 
 // Title Screen Update logic
@@ -68,10 +68,7 @@ void UpdateTitleScreen(void)
         selectionPos.x = 260;
         selection = 1;
     }
-    if (menu == 1)
-        UpdateMainScreen();
-    else// if (menu = 2)
-        UpdatePlayScreen();
+    UpdateMainMenus();
     buttonPressed = 0;
 }
 
@@ -79,8 +76,14 @@ void UpdateTitleScreen(void)
 void DrawTitleScreen(void)
 {
     ClearBackground(LIME);
-    Vector2 pos = { 20, 10 };
-    DrawTextEx(font, "COMP3-PROJECT", pos, font.baseSize*3.0f, 4, BLACK);
+    
+    if (menu == 3)
+    {
+        DrawPlayerSelect();
+        return;
+    }
+
+    DrawTextEx(font, "COMP3-PROJECT", {20, 10}, font.baseSize*3.0f, 4, BLACK);
     DrawText("A multiplayer platforming and puzzle\n solving game by Milo and Trace!", 20, 50, 20, BLACK);
     DrawText("Created using Raylib", 20, 95, 20, BLACK);
     DrawTriangle(selectionPos, Vector2Subtract(selectionPos, Vector2 {20, 0}), Vector2Add(selectionPos, Vector2 {-10, 10}), BLACK);
@@ -89,10 +92,10 @@ void DrawTitleScreen(void)
         if (GuiButton(loadGameRec, "START GAME")) buttonPressed = 1;
         else if (GuiButton({400, screenHeight/2.0f, 100, 50}, "STAGE EDITOR")) buttonPressed = 2;
     }
-    else
+    else if (menu == 2)
     {
-        if (GuiButton(loadGameRec, "LOCAL")) buttonPressed = 3;
-        else if (GuiButton({400, screenHeight/2.0f, 100, 50}, "ONLINE")) buttonPressed = 4;
+        if (GuiButton(loadGameRec, "LOCAL")) buttonPressed = 1;
+        else if (GuiButton({400, screenHeight/2.0f, 100, 50}, "ONLINE")) buttonPressed = 2;
 
         if (GuiButton(backButtonRec, "BACK")) menu = 1;
     }
@@ -110,44 +113,44 @@ int FinishTitleScreen(void)
     return finishScreen;
 }
 
-void UpdateMainScreen(void)
+void UpdateMainMenus(void)
 {
     // Press enter or tap to change to GAMEPLAY screen
     if (IsKeyPressed(KEY_ENTER))
     {
         if (selection == 1)
-            menu = 2;
+            goto firstButton;
         else if (selection == 2)
-            finishScreen = 3;
+            goto secondButton; // gotos are fine, trustt
     }
     if (buttonPressed == 1)
     {
-        menu = 2;
+        firstButton:
+        menu++;
         PlaySound(fxCoin);
     }
     else if (buttonPressed == 2)
-        finishScreen = 3;
-}
-
-void UpdatePlayScreen(void)
-{
-    if (IsKeyPressed(KEY_ENTER))
     {
-        if (selection == 1)
-            menu = 3;
-        else if (selection == 2)
+        secondButton:
+        switch (menu)
         {
-            ;
-            finishScreen = 2;
+            case 1:
+                finishScreen = 3;
+                break;
+            case 2:
+                finishScreen = 2;
+                break;
         }
     }
-    if (buttonPressed == 3)
+}
+
+void DrawPlayerSelect(void)
+{
+    float bgHeight = screenHeight-screenHeight/8;
+    float bgY = (screenHeight - bgHeight)/2;
+    DrawRectangle(0, bgY, screenWidth, bgHeight, DARKGRAY); 
+    for (int i = 0; i < 8; i++)
     {
-        menu = 3;
-    }
-    else if (buttonPressed == 4)
-    {
-        ;
-        finishScreen = 2;
+        DrawRectangle(100+i%4*110, bgY+100+i/4*110, 100, 100, GRAY); // Height and width should be based on screen height and width
     }
 }

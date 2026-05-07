@@ -91,7 +91,12 @@ int main(int argc, char *argv[])
         else if (argv[1] == std::string("-deez"))
         {
             currentScreen = TITLE;
-            InitTitleScreen();
+            InitTitleScreen(1);
+        }
+        else if (argv[1] == std::string("-deez2"))
+        {
+            currentScreen = TITLE;
+            InitTitleScreen(3);
         }
         else if (argv[1] == std::string("-g"))
         {
@@ -206,7 +211,7 @@ static void ChangeToScreen(GameScreen screen)
     switch (screen)
     {
         case LOGO: InitLogoScreen(); break;
-        case TITLE: InitTitleScreen(); break;
+        case TITLE: InitTitleScreen(1); break;
         case OPTIONS: InitOptionsScreen(); break;
         case GAMEPLAY: InitGameplayScreen(); break;
         case ENDING: InitEndingScreen(); break;
@@ -256,7 +261,7 @@ static void UpdateTransition(void)
             switch (transToScreen)
             {
                 case LOGO: InitLogoScreen(); break;
-                case TITLE: InitTitleScreen(); break;
+                case TITLE: InitTitleScreen(1); break;
                 case OPTIONS: InitOptionsScreen(); break;
                 case GAMEPLAY: InitGameplayScreen(); break;
                 case ENDING: InitEndingScreen(); break;
