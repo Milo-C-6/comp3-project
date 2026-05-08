@@ -22,7 +22,20 @@
 
 // #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
-
+//----------------------------------------------------------------------------------
+// Shared Variables Definition (global)
+// NOTE: Those variables are shared between modules through screens.h
+//----------------------------------------------------------------------------------
+KeyboardKey controls[8][3] = { 
+    {KEY_Q, KEY_E, KEY_W}, // Each {} is a different player slot, 0: Left 1: Right 2: Jump
+    {KEY_LEFT, KEY_RIGHT, KEY_UP},
+    {KEY_R, KEY_Y, KEY_T},
+    {KEY_COMMA, KEY_SLASH, KEY_PERIOD},
+    {KEY_U, KEY_O, KEY_I},
+    {KEY_KP_4, KEY_KP_6, KEY_KP_8},
+    {KEY_Z, KEY_C, KEY_X},
+    {KEY_LEFT_BRACKET, KEY_BACKSLASH, KEY_EQUAL}
+};
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
 //----------------------------------------------------------------------------------
@@ -65,7 +78,7 @@ void DrawOptionsScreen(void)
 
         if (GuiButton((Rectangle){0, controlsRec.y+63, 120, 24 }, "MOVE LEFT"));
         {
-            GuiTextBox((Rectangle){screenWidth/2.0f, screenHeight/2.0f, 100, 100}, "W", 50, true);
+            GuiMessageBox((Rectangle){100, controlsRec.y+63, 500, 300}, "EDIT LEFT KEY", "EDIT KEY FOR WHICH PLAYER?", "P1;P2;P3;P4;P5;P6;P7;P8");
         } 
 
         GuiButton((Rectangle){0, controlsRec.y+86, 120, 24 }, "MOVE RIGHT"); 
@@ -85,7 +98,7 @@ int FinishOptionsScreen(void)
 {
     return finishScreen;
 }
-
+/*
 void SetControls(void)
 {
     KeyboardKey defaultControls[8][3] = { 
@@ -98,7 +111,7 @@ void SetControls(void)
         {KEY_Z, KEY_C, KEY_X},
         {KEY_LEFT_BRACKET, KEY_BACKSLASH, KEY_EQUAL}
     };
-    for (int i=0;i<8;i++)
+    for (int i=0; i<8; i++)
     {
         for (int i2=0;i<3;i++)
         {
@@ -106,3 +119,4 @@ void SetControls(void)
         }
     }
 }
+*/

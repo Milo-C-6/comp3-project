@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
     SetMusicVolume(music, 1.0f);
     PlayMusicStream(music);
 
-    SetControls();
+    // SetControls();
     // Setup and init first screen
     if (argc > 1)
     {
