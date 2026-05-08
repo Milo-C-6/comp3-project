@@ -33,6 +33,8 @@ using namespace std;
 // Shared Variables Definition (global)
 // NOTE: Those variables are shared between modules through screens.h
 //----------------------------------------------------------------------------------
+bool plrKeyPressed = false;
+int LastKeyPressed = 0;
 // int screenWidth;
 // int screenHeight;
 // bool hasScreenResized;
@@ -50,6 +52,7 @@ static Camera2D camera = { 0 };
 // Module Functions Declaration
 //----------------------------------------------------------------------------------
 static void LoadLevel(void);  // Create the variables for the gameMap
+static void DrawGameplayUi(void);
 // void RestartLevel(GameMap gMap, vector<Player> *plrs);  // Move players to spawn of level, and reset any moving parts back to original place.
 
 //----------------------------------------------------------------------------------
@@ -89,19 +92,7 @@ void DrawGameplayScreen(void)
 
     EndMode2D();
 
-
-}
-void DrawMap(GameMap gMap)
-{
-    for (MapPart part : gMap.mapParts)
-    {
-        if (part.partType == RECTANGLE)
-            DrawRectangle(part.points[0].x, part.points[0].y, part.points[1].x, part.points[1].y, part.color);
-        else if (part.partType == SLOPE)
-            DrawTriangle(part.points[0], part.points[1], part.points[2], part.color);
-        else if (part.partType == MP_TEXT)
-            DrawText(part.label.c_str(), part.points[0].x, part.points[0].y, 16, part.color);
-    }
+    DrawGameplayUi();
 }
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen(void)
@@ -145,6 +136,8 @@ void LoadLevel(void)
 
 void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
 {
+    // Reset keypressed
+    plrKeyPressed = false;
     // Update camera
     Vector2 minV2 = cam2d->target;
     Vector2 maxV2 = cam2d->target;
@@ -207,6 +200,12 @@ void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
         }
         controlsContiue: // so you can double continue
     }
+    // Reset last pressed key
+    int keyPressed = GetKeyPressed();
+    if (!plrKeyPressed && keyPressed != 0)
+        LastKeyPressed = keyPressed;
+    else if (plrKeyPressed)
+        LastKeyPressed = 0;
 }
 
 void RestartLevel(GameMap *gMap, vector<Player> *plrs)
@@ -217,5 +216,28 @@ void RestartLevel(GameMap *gMap, vector<Player> *plrs)
         plr.pos = Vector2Add(gMap->spawn, {float(i/4*30), float(-i%4*30)} );
         plr.vel = Vector2Zero();
         i++;
+    }
+}
+
+void DrawMap(GameMap gMap)
+{
+    for (MapPart part : gMap.mapParts)
+    {
+        if (part.partType == RECTANGLE)
+            DrawRectangle(part.points[0].x, part.points[0].y, part.points[1].x, part.points[1].y, part.color);
+        else if (part.partType == SLOPE)
+            DrawTriangle(part.points[0], part.points[1], part.points[2], part.color);
+        else if (part.partType == MP_TEXT)
+            DrawText(part.label.c_str(), part.points[0].x, part.points[0].y, 16, part.color);
+    }
+}
+void DrawGameplayUi(void)
+{
+    if (LastKeyPressed != 0)
+    {
+        string label = "Press ";
+        label.append(GetKeyName(KEY_R));
+        label.append(" to drop in player");
+        DrawText(label.c_str(), 250, screenHeight-32, 16, BLACK);
     }
 }

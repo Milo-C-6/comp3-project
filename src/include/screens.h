@@ -40,6 +40,8 @@ extern Music music;
 extern Sound fxCoin;
 extern bool online;
 extern KeyboardKey controls[8][3];
+extern bool plrKeyPressed;
+extern int LastKeyPressed;
 
 #ifdef __cplusplus
 extern "C" {            // Prevents name mangling of functions

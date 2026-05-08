@@ -144,12 +144,21 @@ bool Player::CheckCollision(MapPart part)
 void Player::CheckControls() 
 {
     if (IsKeyDown(controls[id][0]))
+    {
         vel.x = -2;
+        plrKeyPressed = true;
+    }
     else if (IsKeyDown(controls[id][1]))
+    {
         vel.x = 2;
+        plrKeyPressed = true;
+    }
     else
         vel.x = 0;
 
     if (IsKeyDown(controls[id][2]) && onGround)
+    {
         vel.y = -4;
+        plrKeyPressed = true;
+    }
 }
