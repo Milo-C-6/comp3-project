@@ -42,8 +42,7 @@ using namespace std;
 //----------------------------------------------------------------------------------
 static int framesCounter = 0;
 static int finishScreen = 0; // maybe later remove?
-// static Player players[] = { Player(50, 50, KEY_A, KEY_D, KEY_W), Player(50, 80, KEY_LEFT, KEY_RIGHT, KEY_UP) };
-static vector<Player> players = { Player(50, 50, KEY_A, KEY_D, KEY_W), Player(50, 80, KEY_LEFT, KEY_RIGHT, KEY_UP) };
+static vector<Player> players = { Player(50, 50, 0), Player(50, 80, 1) };
 static GameMap gameMap;
 static Camera2D camera = { 0 };
 
@@ -186,6 +185,24 @@ void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
     // Update level
     for (MapPart &mapPart : gMap->mapParts)
         mapPart.ExecuteFormulas();
+
+    // Check other players keyboard keys to add a player
+    for (int i=1;i<8;i++)
+    {
+        for (Player plr2 : *plrs)
+            if (i == plr2.iCtrls)
+                goto controlsContiue; // Skip players already in the game
+
+        for (int i2=0;i2<3;i2++)
+        {
+            if (IsKeyPressed(controls[i][i2]))
+            {
+                plrs->push_back(Player(gMap->spawn.x, gMap->spawn.y, i));
+                break;
+            }
+        }
+        controlsContiue: // so you can double continue
+    }
 }
 
 void RestartLevel(GameMap *gMap, vector<Player> *plrs)

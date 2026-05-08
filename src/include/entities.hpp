@@ -29,9 +29,9 @@ class Player
         Vector2 vel;
         bool onGround;
         bool onSlope;
-        KeyboardKey controls[3];
+        int iCtrls;
         
-        Player(float x, float y, KeyboardKey left, KeyboardKey right, KeyboardKey jump);
+        Player(float x, float y, int iCtrls);
         
         void UpdatePosition();
         bool CheckCollision(MapPart part);

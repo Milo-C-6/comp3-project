@@ -91,7 +91,7 @@ static int draggingBox; // 1 = Config box, 2 = Part info box,
 static char sFilename[64];
 // Testing
 static bool testing;
-static vector<Player> players = { Player(50, 50, KEY_A, KEY_D, KEY_W), Player(50, 80, KEY_LEFT, KEY_RIGHT, KEY_UP) };
+static vector<Player> players = { Player(50, 50, 0), Player(50, 80, 1) };
 
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
@@ -349,7 +349,7 @@ void DrawMainPanel(void)
     {
         // Part mode 
         GuiSetTooltip("Add player");
-        if (GuiButton((Rectangle){280, 8, 24, 24}, "#150#")) players.push_back(Player(gameMap.spawn.x, gameMap.spawn.y, KEY_F, KEY_H, KEY_T));
+        if (GuiButton((Rectangle){280, 8, 24, 24}, "#150#")) players.push_back(Player(gameMap.spawn.x, gameMap.spawn.y, 3));
         GuiSetTooltip("Remove player");
         if (GuiButton((Rectangle){306, 8, 24, 24}, "#147#")) players.pop_back();
         GuiSetTooltip("Stop testing");

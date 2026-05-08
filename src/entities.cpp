@@ -21,18 +21,17 @@
 #include "raymath.h"
 #include "entities.hpp"
 #include "map_parts.hpp"
+#include "screens.h"
 #include <iostream>
 using namespace std;
 
-Player::Player(float x, float y, KeyboardKey left, KeyboardKey right, KeyboardKey jump)
+Player::Player(float x, float y, int iCtrls)
 {
     this->pos = Vector2{x, y};
     this->vel = Vector2{0, 0};
     this->onGround = false;
     this->onSlope = false;
-    controls[0] = left; // there has got to be a better way to do this
-    controls[1] = right;
-    controls[2] = jump;
+    this->iCtrls = iCtrls;
 }
 
 void Player::UpdatePosition() 
@@ -144,13 +143,13 @@ bool Player::CheckCollision(MapPart part)
 }
 void Player::CheckControls() 
 {
-    if (IsKeyDown(controls[0]))
+    if (IsKeyDown(controls[iCtrls][0]))
         vel.x = -2;
-    else if (IsKeyDown(controls[1]))
+    else if (IsKeyDown(controls[iCtrls][1]))
         vel.x = 2;
     else
         vel.x = 0;
 
-    if (IsKeyDown(controls[2]) && onGround)
+    if (IsKeyDown(controls[iCtrls][2]) && onGround)
         vel.y = -4;
 }
