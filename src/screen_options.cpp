@@ -43,7 +43,14 @@ static int framesCounter = 0;
 static int finishScreen = 0;
 static Rectangle backButtonRec = {screenWidth-100.0f, 0, 100, 50};
 static Rectangle controlsRec = {0, 20, 120, 40};
+bool windowBox;
 bool windowControlsActive = false;
+//Wow so many buttons
+bool backButton = false;
+bool editControlsButton = false;
+bool editLeftButton = false;
+bool editRightButton = false;
+bool editJumpButton = false;
 //----------------------------------------------------------------------------------
 // Options Screen Functions Definition
 //----------------------------------------------------------------------------------
@@ -68,23 +75,26 @@ void DrawOptionsScreen(void)
     // TODO: Draw OPTIONS screen here!
     DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), LIGHTGRAY);
     DrawText("OPTIONS:", 0, 0, 20, BLACK);
-    if (GuiButton(backButtonRec, "BACK"));
+    // Set up buttons
+    backButton = GuiButton(backButtonRec, "BACK");
+    editControlsButton = GuiButton(controlsRec, "EDIT CONTROLS");
 
-    if (GuiButton(controlsRec, "EDIT CONTROLS")) windowControlsActive = true;
-
+    if (editControlsButton) windowControlsActive = true;
+    
     if (windowControlsActive)
     {
-        if (GuiWindowBox({0, controlsRec.y+40, 120, 93}, "CONTROLS:")) windowControlsActive = false;
+        windowBox = GuiWindowBox({0, controlsRec.y+40, 120, 93}, "CONTROLS:");
+        if (GuiButton((Rectangle){0, controlsRec.y+63, 120, 24 }, "MOVE LEFT")) editLeftButton = true;
+        if (GuiButton((Rectangle){0, controlsRec.y+86, 120, 24 }, "MOVE RIGHT")) editRightButton;
+        if (GuiButton((Rectangle){0, controlsRec.y+109, 120, 24 }, "JUMP")) editJumpButton;
 
-        if (GuiButton((Rectangle){0, controlsRec.y+63, 120, 24 }, "MOVE LEFT"));
+        if (editLeftButton)
         {
-            GuiMessageBox((Rectangle){100, controlsRec.y+63, 500, 300}, "EDIT LEFT KEY", "EDIT KEY FOR WHICH PLAYER?", "P1;P2;P3;P4;P5;P6;P7;P8");
+            GuiMessageBox((Rectangle){100, controlsRec.y+63, 300, 100}, "EDIT LEFT KEY", "EDIT KEY FOR WHICH PLAYER?", "P1;P2;P3;P4;P5;P6;P7;P8");
         } 
-
-        GuiButton((Rectangle){0, controlsRec.y+86, 120, 24 }, "MOVE RIGHT"); 
-        GuiButton((Rectangle){0, controlsRec.y+109, 120, 24 }, "JUMP"); 
+        
+        if (windowBox) windowControlsActive = false;
     }
-    
 }
 
 // Options Screen Unload logic
