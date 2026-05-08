@@ -88,6 +88,8 @@ void DrawGameplayScreen(void)
             DrawRectangle(plr.pos.x, plr.pos.y, 25, 25, BLUE);
 
     EndMode2D();
+
+
 }
 void DrawMap(GameMap gMap)
 {
@@ -162,12 +164,14 @@ void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
         plr.CheckControls();
 
         // Handle collision
-        // for (Player plr2 : players)
-        // {
-        //     if (plr == plr2)
-        //         continue;
-        //     plr.checkCollision()
-        // }
+            // Player collision
+        for (Player plr2 : *plrs)
+        {
+            if (plr.id == plr2.id)
+                continue;
+            plr.CheckCollision(MapPart(RECTANGLE, BLACK, vector<Vector2>{plr2.pos, {25, 25}}));
+        }
+            // Map collision
         for (MapPart part : gMap->mapParts)
             if (plr.CheckCollision(part) && part.attributes.count(KILL))
                 RestartLevel(gMap, plrs);
@@ -190,7 +194,7 @@ void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
     for (int i=1;i<8;i++)
     {
         for (Player plr2 : *plrs)
-            if (i == plr2.iCtrls)
+            if (i == plr2.id)
                 goto controlsContiue; // Skip players already in the game
 
         for (int i2=0;i2<3;i2++)

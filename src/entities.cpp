@@ -25,13 +25,13 @@
 #include <iostream>
 using namespace std;
 
-Player::Player(float x, float y, int iCtrls)
+Player::Player(float x, float y, int id)
 {
     this->pos = Vector2{x, y};
     this->vel = Vector2{0, 0};
     this->onGround = false;
     this->onSlope = false;
-    this->iCtrls = iCtrls;
+    this->id = id;
 }
 
 void Player::UpdatePosition() 
@@ -143,13 +143,13 @@ bool Player::CheckCollision(MapPart part)
 }
 void Player::CheckControls() 
 {
-    if (IsKeyDown(controls[iCtrls][0]))
+    if (IsKeyDown(controls[id][0]))
         vel.x = -2;
-    else if (IsKeyDown(controls[iCtrls][1]))
+    else if (IsKeyDown(controls[id][1]))
         vel.x = 2;
     else
         vel.x = 0;
 
-    if (IsKeyDown(controls[iCtrls][2]) && onGround)
+    if (IsKeyDown(controls[id][2]) && onGround)
         vel.y = -4;
 }

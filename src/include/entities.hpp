@@ -29,9 +29,9 @@ class Player
         Vector2 vel;
         bool onGround;
         bool onSlope;
-        int iCtrls;
+        int id;
         
-        Player(float x, float y, int iCtrls);
+        Player(float x, float y, int id);
         
         void UpdatePosition();
         bool CheckCollision(MapPart part);
