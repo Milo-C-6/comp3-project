@@ -62,7 +62,12 @@ void DrawOptionsScreen(void)
     if (windowControlsActive)
     {
         if (GuiWindowBox({0, controlsRec.y+40, 120, 93}, "CONTROLS:")) windowControlsActive = false;
-        GuiButton((Rectangle){0, controlsRec.y+63, 120, 24 }, "MOVE LEFT"); 
+
+        if (GuiButton((Rectangle){0, controlsRec.y+63, 120, 24 }, "MOVE LEFT"));
+        {
+            GuiTextBox((Rectangle){screenWidth/2.0f, screenHeight/2.0f, 100, 100}, "W", 50, true);
+        } 
+
         GuiButton((Rectangle){0, controlsRec.y+86, 120, 24 }, "MOVE RIGHT"); 
         GuiButton((Rectangle){0, controlsRec.y+109, 120, 24 }, "JUMP"); 
     }
