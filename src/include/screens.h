@@ -39,6 +39,7 @@ extern Font font;
 extern Music music;
 extern Sound fxCoin;
 extern bool online;
+extern KeyboardKey controls[8][3];
 
 #ifdef __cplusplus
 extern "C" {            // Prevents name mangling of functions
