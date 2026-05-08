@@ -71,6 +71,7 @@ void UpdateOptionsScreen(void);
 void DrawOptionsScreen(void);
 void UnloadOptionsScreen(void);
 int FinishOptionsScreen(void);
+void SetControls(void);
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Declaration

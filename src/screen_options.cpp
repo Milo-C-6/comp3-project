@@ -85,3 +85,24 @@ int FinishOptionsScreen(void)
 {
     return finishScreen;
 }
+
+void SetControls(void)
+{
+    KeyboardKey defaultControls[8][3] = { 
+        {KEY_Q, KEY_E, KEY_W}, // Each {} is a different player slot, 0: Left 1: Right 2: Jump
+        {KEY_LEFT, KEY_RIGHT, KEY_UP},
+        {KEY_R, KEY_Y, KEY_T},
+        {KEY_COMMA, KEY_SLASH, KEY_PERIOD},
+        {KEY_U, KEY_O, KEY_I},
+        {KEY_KP_4, KEY_KP_6, KEY_KP_8},
+        {KEY_Z, KEY_C, KEY_X},
+        {KEY_LEFT_BRACKET, KEY_BACKSLASH, KEY_EQUAL}
+    };
+    for (int i=0;i<8;i++)
+    {
+        for (int i2=0;i<3;i++)
+        {
+            controls[i][i2] = defaultControls[i][i2];
+        }
+    }
+}
