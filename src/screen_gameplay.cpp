@@ -50,6 +50,7 @@ static Camera2D camera = { 0 };
 static float dropInAlpha = 0;
 static int dropInHintI = 1;
 static bool switchHint = true;
+static int plrsInWin = 0;
 
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
@@ -139,8 +140,9 @@ void LoadLevel(void)
 
 void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
 {
-    // Reset keypressed
+    // Reset values
     plrKeyPressed = false;
+    plrsInWin = 0;
     // Update camera
     Vector2 minV2 = cam2d->target;
     Vector2 maxV2 = cam2d->target;
@@ -169,8 +171,13 @@ void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
         }
             // Map collision
         for (MapPart part : gMap->mapParts)
-            if (plr.CheckCollision(part) && part.attributes.count(KILL))
-                RestartLevel(gMap, plrs);
+            if (plr.CheckCollision(part))
+            {
+                if (part.attributes.count(KILL) && part.attributes.at(KILL) > 0)
+                    RestartLevel(gMap, plrs);
+                else if (part.attributes.count(WIN) && part.attributes.at(WIN) > 0)
+                    plrsInWin++;
+            } 
         plr.UpdatePosition();
     }
 
