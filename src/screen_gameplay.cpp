@@ -134,7 +134,7 @@ void LoadLevel(void)
         MapPart(RECTANGLE, VIOLET, vector<Vector2>{ {-155, 180}, {25, 50} }, unordered_map<PartAttributes, int>{ {MOVING, 1} })
     };
 
-    gameMap.mapParts[10].formulaY = "180+20*sin(x)";
+    gameMap.mapParts[10].formulaY = "180+20*sin(t)";
 }
 
 void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
@@ -184,7 +184,7 @@ void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
 
     // Update level
     for (MapPart &mapPart : gMap->mapParts)
-        mapPart.ExecuteFormulas();
+        mapPart.ExecuteFormulas(plrs->size());
 
     // Check other players keyboard keys to add a player
     for (int i=1;i<8;i++)

@@ -46,7 +46,7 @@ MapPart::MapPart()
     this->color = ORANGE;
 }
 
-void MapPart::ExecuteFormulas()
+void MapPart::ExecuteFormulas(float numPlrs)
 {
     if (!this->attributes.count(MOVING) > 0)
         return;
@@ -58,7 +58,8 @@ void MapPart::ExecuteFormulas()
     float time = GetTime();
 
     symbol_table_t symbol_table;
-    symbol_table.add_variable("x", time);
+    symbol_table.add_variable("t", time);
+    symbol_table.add_variable("n", numPlrs);
     symbol_table.add_constants();
 
     expression_t expression;

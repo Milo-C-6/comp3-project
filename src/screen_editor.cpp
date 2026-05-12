@@ -66,6 +66,8 @@ static bool showInfo;
 static Rectangle messageBoxRect;
 static Rectangle partInfoRect;
 static int inputSelection; // 1-5: Config inputs, 6-15: Part info inputs
+static int partBrowserScroll;
+static bool showPartBrowser;
 // Part Info
 static int cPartValues[6];
 static bool cPartChecks[4];
@@ -100,6 +102,7 @@ static int PlacePart(int partI, GameMap *gMap); // Insert a block into the map p
 static void DrawMainPanel(void); // Draws the main top control panel
 static void DrawSavePanel(void); // Draws the save menu
 static void DrawPartPanel(void); // Draws the part control panel
+static void DrawPartBrowser(void); // Draws the browser for parts
 static int getClickedPart(GameMap gMap); // Gets the part clicked by mouse
 static void CheckEditorWindows(void); // Make dragging/keyboard input for windows work
 static bool isMouseNotOverGui(void); // Returns bool if mouse is not over any guis
@@ -140,9 +143,14 @@ void InitEditorScreen(void)
     camera.zoom = 1.0f;
     isPanning = false;
     testing = false;
+    partBrowserScroll = 0;
+    showPartBrowser = false;
 
     GuiSetStyle(LISTVIEW, SCROLLBAR_WIDTH, 8);
     GuiSetStyle(VALUEBOX, TEXT_PADDING, 5);
+    GuiSetStyle(LISTVIEW, BORDER_COLOR_PRESSED, 0xc70404ff);
+    GuiSetStyle(LISTVIEW, BASE_COLOR_PRESSED, 0xff9797ff);
+    GuiSetStyle(LISTVIEW, TEXT_COLOR_PRESSED, 0x000000ff);
     GuiEnableTooltip();
 }
 
@@ -178,18 +186,13 @@ void UpdateEditorScreen(void)
         }
 
         // Dragging map parts
-        if ((editMode == 2 || editMode == 3) && selectedPart != -1)
+        if ((editMode == 2 || editMode == 3) && selectedPart > -1)
         {
-            if (selectedPart == -2)
-                gameMap.spawn = newPos;
-            else
+            gameMap.mapParts.at(selectedPart).points[0] = Vector2Subtract(mouseWorldPos, mouseDistance[0]);
+            if (gameMap.mapParts.at(selectedPart).partType == SLOPE)
             {
-                gameMap.mapParts.at(selectedPart).points[0] = Vector2Subtract(mouseWorldPos, mouseDistance[0]);
-                if (gameMap.mapParts.at(selectedPart).partType == SLOPE)
-                {
-                    gameMap.mapParts.at(selectedPart).points[1] = Vector2Subtract(mouseWorldPos, mouseDistance[1]);
-                    gameMap.mapParts.at(selectedPart).points[2] = Vector2Subtract(mouseWorldPos, mouseDistance[2]);
-                }
+                gameMap.mapParts.at(selectedPart).points[1] = Vector2Subtract(mouseWorldPos, mouseDistance[1]);
+                gameMap.mapParts.at(selectedPart).points[2] = Vector2Subtract(mouseWorldPos, mouseDistance[2]);
             }
         }
     }
@@ -200,6 +203,7 @@ void UpdateEditorScreen(void)
         // Acutal level edits should only happen if we're pressing in the level area
         if (isMouseNotOverGui())
         {
+            inputSelection = 0;
             if (editMode != 1 && editMode != 2)
                 selectedPart = getClickedPart(gameMap);
             switch(editMode)
@@ -210,6 +214,7 @@ void UpdateEditorScreen(void)
                 case 2: // Move mode
                 case 3: // Copy mode
                     selectedPart = -1;
+                    goto skipPartInfo;
                     break;
                 case 4: // Delete mode
                     if (selectedPart > -1)
@@ -257,6 +262,7 @@ void UpdateEditorScreen(void)
             sPart.formulaY = cPartFormulaY;
         }
     }
+    skipPartInfo:
     // Apply the config
     if (saveStatus == 1)
     {
@@ -309,6 +315,7 @@ void DrawEditorScreen(void)
         DrawGameplayUi();
     // Draw GUIs
     DrawMainPanel();
+    DrawPartBrowser();
     DrawSavePanel();
     DrawPartPanel();
 }
@@ -419,6 +426,39 @@ void DrawPartPanel(void)
     GuiLabel((Rectangle){partInfoRect.x+10, partInfoRect.y+275, 50, 30}, "Color");
     GuiComboBox((Rectangle){partInfoRect.x+60, partInfoRect.y+275, 200, 30}, "DARKGRAY;MAROON;ORANGE;DARKGREEN;DARKBLUE;DARKPURPLE;DARKBROWN;GRAY;RED;GOLD;LIME;BLUE;VIOLET;BROWN;LIGHTGRAY;PINK;YELLOW;GREEN;SKYBLUE;PURPLE;BEIGE;BLACK", &colorIndex);
 }
+void DrawPartBrowser(void)
+{
+    if (GuiButton((Rectangle){float(screenWidth-100), 40, 100, 30}, "Part Browser")) showPartBrowser = !showPartBrowser;
+
+    if (!showPartBrowser)
+        return;
+
+    int active = -1;
+    string partList = "";
+    for (MapPart mPart : gameMap.mapParts)
+        switch (mPart.partType)
+        {
+            case RECTANGLE:
+                partList.append("Rectangle;");
+                break;
+            case SLOPE:
+                partList.append("Slope;");
+                break;
+            case MP_TEXT:
+                partList.append("Text;");
+                break;
+            default:
+                break;
+        }
+
+    GuiListView((Rectangle){float(screenWidth-100), 70, 100, float(screenHeight-70)}, partList.c_str(), &partBrowserScroll, &active);
+
+    if (active > -1 && gameMap.mapParts.size() > 0)
+    {
+        selectedPart = -1;
+        gameMap.mapParts.erase(gameMap.mapParts.begin() + active);
+    }
+}
 int PlacePart(int partI, GameMap *gMap)
 {
     // Reset cPart values
@@ -516,7 +556,10 @@ bool isMouseNotOverGui(void)
 {
     return (!saveStatus 
             && !CheckCollisionPointRec(GetMousePosition(), (Rectangle){0, 0, float(screenWidth), 40})
-            && !(selectedPart != -1 && editMode != 4 && CheckCollisionPointRec(GetMousePosition(), partInfoRect)));
+            && !(selectedPart != -1 && editMode != 4 && CheckCollisionPointRec(GetMousePosition(), partInfoRect))
+            && !CheckCollisionPointRec(GetMousePosition(), (Rectangle){float(screenWidth-100), 40, 100, 30})    
+            && !(showPartBrowser && CheckCollisionPointRec(GetMousePosition(), (Rectangle){float(screenWidth-100), 70, 100, float(screenHeight-70)}))    
+        );
 }
 void InitialMovePart(void)
 {
@@ -545,6 +588,8 @@ void CopyPart(void)
         
     partI = gameMap.mapParts.at(partI).partType;
     selectedPart = PlacePart(partI, &gameMap);
+    gameMap.mapParts.at(selectedPart).points = gameMap.mapParts.at(partI).points;
+    setCPartInfo(gameMap.mapParts.at(partI));
 }
 void cameraMovements(void)
 {
@@ -652,10 +697,18 @@ void LoadLevel(void)
 
     if (filename)
     {
+        // Load map
         ifstream inputGameMapFile(filename);
         inputGameMapFile >> gameMap;
         inputGameMapFile.close();
         free(filename);
+
+        // Set other variables
+        strcpy(titleInput, gameMap.title.c_str());
+        strcpy(descriptionInput, gameMap.description.c_str());
+        strcpy(authorInput, gameMap.author.c_str());
+        levelWidth = gameMap.levelSize.x;
+        levelHeight = gameMap.levelSize.y;
     }
     osdialog_filters_free(filters);
 }
@@ -675,5 +728,5 @@ void FinishTesting(void)
     camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
     camera.target = Vector2Zero();
     // Reset gui style
-   GuiLoadStyleDefault();
+    GuiLoadStyleDefault();
 }
