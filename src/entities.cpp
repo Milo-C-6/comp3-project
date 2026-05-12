@@ -41,9 +41,6 @@ void Player::UpdatePosition()
 }
 bool Player::CheckCollision(MapPart part) 
 {
-    if (part.attributes.count(WIN) > 0 && part.attributes.at(WIN) > 0)
-        return false;
-
     bool yCollide = false;
     bool xCollide = false;
 
@@ -113,6 +110,9 @@ bool Player::CheckCollision(MapPart part)
         yCollide = CheckCollisionRecs(Rectangle {pos.x+1, pos.y+1 + vel.y, 23, 23}, partRect); // plus 1 to center the collision
         xCollide = CheckCollisionRecs(Rectangle {pos.x+1  + vel.x, pos.y+1, 23, 23}, partRect);
     }
+
+    if (part.attributes.count(WIN) > 0 && part.attributes.at(WIN) > 0)
+        return xCollide || yCollide;
 
     if (xCollide)
         vel.x = 0;
