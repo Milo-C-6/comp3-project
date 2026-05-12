@@ -22,6 +22,7 @@
 #include "game_map.hpp"
 #include "entities.hpp"
 #include <vector>
+#include <string>
 
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
@@ -59,7 +60,7 @@ int FinishLogoScreen(void);
 //----------------------------------------------------------------------------------
 // Title Screen Functions Declaration
 //----------------------------------------------------------------------------------
-void InitTitleScreen(int imenu);
+void InitTitleScreen(int imenu = 1);
 void UpdateTitleScreen(void);
 void DrawTitleScreen(void);
 void UnloadTitleScreen(void);
@@ -78,7 +79,7 @@ int FinishOptionsScreen(void);
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Declaration
 //----------------------------------------------------------------------------------
-void InitGameplayScreen(void);
+void InitGameplayScreen(int lvl = 0, string world = "base");
 void UpdateGameplayScreen(void);
 void DrawGameplayScreen(void);
 void UnloadGameplayScreen(void);

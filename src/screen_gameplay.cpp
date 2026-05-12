@@ -26,6 +26,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <fstream>
 
 using namespace std;
 
@@ -51,11 +52,14 @@ static float dropInAlpha = 0;
 static int dropInHintI = 1;
 static bool switchHint = true;
 static int plrsInWin = 0;
+static string world = "base";
+static int lvl = 0;
 
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
 //----------------------------------------------------------------------------------
-static void LoadLevel(void);  // Create the variables for the gameMap
+// static void LoadLevel(void);  // Create the variables for the gameMap
+static void StartLevel(void); // Starts level based on lvl and world variables
 // void RestartLevel(GameMap gMap, vector<Player> *plrs);  // Move players to spawn of level, and reset any moving parts back to original place.
 
 //----------------------------------------------------------------------------------
@@ -63,7 +67,7 @@ static void LoadLevel(void);  // Create the variables for the gameMap
 //----------------------------------------------------------------------------------
 
 // Gameplay Screen Initialization logic
-void InitGameplayScreen(void)
+void InitGameplayScreen(int lvl, string world)
 {
     framesCounter = 0;
     finishScreen = 0;
@@ -74,13 +78,21 @@ void InitGameplayScreen(void)
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
     dropInAlpha = 0;
-    LoadLevel();
+    ::lvl = lvl;
+    ::world = world;
+    StartLevel();
 }
 
 // Gameplay Screen Update logic
 void UpdateGameplayScreen(void)
 {
     UpdateLevel(&gameMap, &players, &camera);
+    // Check win
+    if (plrsInWin >= players.size())
+    {
+        lvl++;
+        StartLevel();
+    }
 }
 
 // Gameplay Screen Draw logic
@@ -112,31 +124,31 @@ int FinishGameplayScreen(void)
     return finishScreen;
 }
 
-void LoadLevel(void)
-{
-    // TODO: We need a proper file level format that we can use to load from, rather than hard coded levels.
-    gameMap.title = "0: Debug";
-    gameMap.description = "For debbugging the game";
-    gameMap.author = "Milo";
-    gameMap.spawn = Vector2{50, 50};
-    gameMap.levelSize = Vector2{2500, 500};
+// void LoadLevel(void)
+// {
+//     // TODO: We need a proper file level format that we can use to load from, rather than hard coded levels.
+//     gameMap.title = "0: Debug";
+//     gameMap.description = "For debbugging the game";
+//     gameMap.author = "Milo";
+//     gameMap.spawn = Vector2{50, 50};
+//     gameMap.levelSize = Vector2{2500, 500};
 
-    gameMap.mapParts = {
-        MapPart(SLOPE, GOLD, vector<Vector2>{ {399, 119}, {399, 155}, {500, 155} }), // Slopes have to be drawn first, and slightly overlapped into other things
-        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {0, 150}, {200, 50} }),
-        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {200, 120}, {200, 50} }),
-        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 150}, {500, 50} }),
-        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 0}, {500, 50} }),
-        MapPart(RECTANGLE, RED, vector<Vector2>{ {300, 0}, {50, 50} }, unordered_map<PartAttributes, int>{ {KILL, 1} }),
-        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {-250, 200}, {200, 50} }),
-        MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {-50, 150}, {25, 50} }),
-        MapPart(RECTANGLE, BLACK, vector<Vector2>{ {-85, 150}, {25, 50} }, unordered_map<PartAttributes, int>{ {LAUNCHER, -5} }),
-        MapPart(RECTANGLE, LIME, vector<Vector2>{ {-120, 150}, {25, 50} }, unordered_map<PartAttributes, int>{ {BOUNCY, 1} }),
-        MapPart(RECTANGLE, VIOLET, vector<Vector2>{ {-155, 180}, {25, 50} }, unordered_map<PartAttributes, int>{ {MOVING, 1} })
-    };
+//     gameMap.mapParts = {
+//         MapPart(SLOPE, GOLD, vector<Vector2>{ {399, 119}, {399, 155}, {500, 155} }), // Slopes have to be drawn first, and slightly overlapped into other things
+//         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {0, 150}, {200, 50} }),
+//         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {200, 120}, {200, 50} }),
+//         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 150}, {500, 50} }),
+//         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 0}, {500, 50} }),
+//         MapPart(RECTANGLE, RED, vector<Vector2>{ {300, 0}, {50, 50} }, unordered_map<PartAttributes, int>{ {KILL, 1} }),
+//         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {-250, 200}, {200, 50} }),
+//         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {-50, 150}, {25, 50} }),
+//         MapPart(RECTANGLE, BLACK, vector<Vector2>{ {-85, 150}, {25, 50} }, unordered_map<PartAttributes, int>{ {LAUNCHER, -5} }),
+//         MapPart(RECTANGLE, LIME, vector<Vector2>{ {-120, 150}, {25, 50} }, unordered_map<PartAttributes, int>{ {BOUNCY, 1} }),
+//         MapPart(RECTANGLE, VIOLET, vector<Vector2>{ {-155, 180}, {25, 50} }, unordered_map<PartAttributes, int>{ {MOVING, 1} })
+//     };
 
-    gameMap.mapParts[10].formulaY = "180+20*sin(t)";
-}
+//     gameMap.mapParts[10].formulaY = "180+20*sin(t)";
+// }
 
 void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
 {
@@ -271,4 +283,19 @@ void DrawGameplayUi(void)
         label.append(" to drop in player");
         DrawText(label.c_str(), 250, screenHeight-32, 16, Fade(BLACK, dropInAlpha));
     }
+}
+void StartLevel(void)
+{
+    ifstream inputGameMapFile("resources/levels/" + world + to_string(lvl) + ".cm");
+
+    if (!inputGameMapFile.good())
+    {
+        finishScreen = 2;
+        return;
+    }
+
+    inputGameMapFile >> gameMap;
+    inputGameMapFile.close();
+
+    RestartLevel(&gameMap, &players);
 }
