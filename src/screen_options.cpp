@@ -34,7 +34,7 @@ KeyboardKey controls[8][3] = {
     {KEY_U, KEY_O, KEY_I},
     {KEY_KP_4, KEY_KP_6, KEY_KP_8},
     {KEY_Z, KEY_C, KEY_X},
-    {KEY_LEFT_BRACKET, KEY_BACKSLASH, KEY_EQUAL}
+    {KEY_LEFT_BRACKET, KEY_BACKSLASH, KEY_RIGHT_BRACKET}
 };
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
