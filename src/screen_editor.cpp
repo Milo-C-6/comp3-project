@@ -305,6 +305,8 @@ void DrawEditorScreen(void)
         }
         DrawRectangleLines(-gameMap.levelSize.x/2, -gameMap.levelSize.y/2, gameMap.levelSize.x, gameMap.levelSize.y, RED); // Map border
     EndMode2D();
+    if (testing)
+        DrawGameplayUi();
     // Draw GUIs
     DrawMainPanel();
     DrawSavePanel();

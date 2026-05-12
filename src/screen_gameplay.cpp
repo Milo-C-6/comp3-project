@@ -34,7 +34,7 @@ using namespace std;
 // NOTE: Those variables are shared between modules through screens.h
 //----------------------------------------------------------------------------------
 bool plrKeyPressed = false;
-int LastKeyPressed = 0;
+static int LastKeyPressed = 0;
 // int screenWidth;
 // int screenHeight;
 // bool hasScreenResized;
@@ -47,12 +47,14 @@ static int finishScreen = 0; // maybe later remove?
 static vector<Player> players = { Player(50, 50, 0), Player(50, 80, 1) };
 static GameMap gameMap;
 static Camera2D camera = { 0 };
+static float dropInAlpha = 0;
+static int dropInHintI = 1;
+static bool switchHint = true;
 
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
 //----------------------------------------------------------------------------------
 static void LoadLevel(void);  // Create the variables for the gameMap
-static void DrawGameplayUi(void);
 // void RestartLevel(GameMap gMap, vector<Player> *plrs);  // Move players to spawn of level, and reset any moving parts back to original place.
 
 //----------------------------------------------------------------------------------
@@ -70,6 +72,7 @@ void InitGameplayScreen(void)
     camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
+    dropInAlpha = 0;
     LoadLevel();
 }
 
@@ -203,9 +206,27 @@ void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
     // Reset last pressed key
     int keyPressed = GetKeyPressed();
     if (!plrKeyPressed && keyPressed != 0)
+    {
         LastKeyPressed = keyPressed;
+    }
     else if (plrKeyPressed)
         LastKeyPressed = 0;
+
+    if (LastKeyPressed != 0)
+    {
+        dropInAlpha = sin(4*GetTime())/2+0.5;
+        if (switchHint && dropInAlpha < 0.1)
+        {
+            if (dropInHintI < 7)
+                dropInHintI += 1;
+            else
+                dropInHintI = 1;
+            
+            switchHint = false;
+        }
+        else if (dropInAlpha > 0.9)
+            switchHint = true;
+    }
 }
 
 void RestartLevel(GameMap *gMap, vector<Player> *plrs)
@@ -236,8 +257,11 @@ void DrawGameplayUi(void)
     if (LastKeyPressed != 0)
     {
         string label = "Press ";
-        label.append(GetKeyName(KEY_R));
+        if (dropInHintI == 1) // GetKeyName(KEY_LEFT) returns null for some reason, atleast on linux
+            label.append("Left arrow");
+        else
+            label.append(GetKeyName(controls[dropInHintI][0]));
         label.append(" to drop in player");
-        DrawText(label.c_str(), 250, screenHeight-32, 16, BLACK);
+        DrawText(label.c_str(), 250, screenHeight-32, 16, Fade(BLACK, dropInAlpha));
     }
 }

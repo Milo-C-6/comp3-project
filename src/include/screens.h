@@ -41,7 +41,7 @@ extern Sound fxCoin;
 extern bool online;
 extern KeyboardKey controls[8][3];
 extern bool plrKeyPressed;
-extern int LastKeyPressed;
+// extern int LastKeyPressed;
 
 #ifdef __cplusplus
 extern "C" {            // Prevents name mangling of functions
@@ -84,6 +84,7 @@ void DrawGameplayScreen(void);
 void UnloadGameplayScreen(void);
 int FinishGameplayScreen(void);
 void DrawMap(GameMap gMap);
+void DrawGameplayUi(void);
 
 //----------------------------------------------------------------------------------
 // Editor Screen Functions Declaration
