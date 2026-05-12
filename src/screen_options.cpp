@@ -45,6 +45,7 @@ static Rectangle backButtonRec = {screenWidth-100.0f, 0, 100, 50};
 static Rectangle controlsRec = {0, 20, 120, 40};
 bool windowBox;
 bool windowControlsActive = false;
+int playerSelected;
 //Wow so many buttons
 bool backButton = false;
 bool editControlsButton = false;
@@ -90,7 +91,14 @@ void DrawOptionsScreen(void)
 
         if (editLeftBind)
         {
-            GuiMessageBox((Rectangle){100, controlsRec.y+63, 300, 100}, "EDIT LEFT KEY", "EDIT KEY FOR WHICH PLAYER?", "P1;P2;P3;P4;P5;P6;P7;P8");
+            // His name is leon
+            int leon = GuiMessageBox((Rectangle){100, controlsRec.y+63, 300, 100}, "EDIT LEFT KEY", "EDIT KEY FOR WHICH PLAYER?", "P1;P2;P3;P4;P5;P6;P7;P8");
+            if (leon != -1){
+                playerSelected = leon;
+                // From hit game resident evil
+                KeyboardKey ashely = (KeyboardKey) GetKeyPressed();
+            }
+            
         } 
         
         if (windowBox) windowControlsActive = false;
