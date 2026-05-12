@@ -48,9 +48,9 @@ bool windowControlsActive = false;
 //Wow so many buttons
 bool backButton = false;
 bool editControlsButton = false;
-bool editLeftButton = false;
-bool editRightButton = false;
-bool editJumpButton = false;
+bool editLeftBind = false;
+bool editRightBind = false;
+bool editJumpBind = false;
 //----------------------------------------------------------------------------------
 // Options Screen Functions Definition
 //----------------------------------------------------------------------------------
@@ -84,11 +84,11 @@ void DrawOptionsScreen(void)
     if (windowControlsActive)
     {
         windowBox = GuiWindowBox({0, controlsRec.y+40, 120, 93}, "CONTROLS:");
-        if (GuiButton((Rectangle){0, controlsRec.y+63, 120, 24 }, "MOVE LEFT")) editLeftButton = true;
-        if (GuiButton((Rectangle){0, controlsRec.y+86, 120, 24 }, "MOVE RIGHT")) editRightButton;
-        if (GuiButton((Rectangle){0, controlsRec.y+109, 120, 24 }, "JUMP")) editJumpButton;
+        if (GuiButton((Rectangle){0, controlsRec.y+63, 120, 24 }, "MOVE LEFT")) editLeftBind = true;
+        if (GuiButton((Rectangle){0, controlsRec.y+86, 120, 24 }, "MOVE RIGHT")) editRightBind;
+        if (GuiButton((Rectangle){0, controlsRec.y+109, 120, 24 }, "JUMP")) editJumpBind;
 
-        if (editLeftButton)
+        if (editLeftBind)
         {
             GuiMessageBox((Rectangle){100, controlsRec.y+63, 300, 100}, "EDIT LEFT KEY", "EDIT KEY FOR WHICH PLAYER?", "P1;P2;P3;P4;P5;P6;P7;P8");
         } 
