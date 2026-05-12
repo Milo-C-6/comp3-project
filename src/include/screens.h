@@ -39,6 +39,7 @@ extern GameScreen currentScreen;
 extern Font font;
 extern Music music;
 extern Sound fxCoin;
+extern Texture2D txKey; // if we make more texutres, we should just make a map and enum of these
 extern bool online;
 extern KeyboardKey controls[8][3];
 extern bool plrKeyPressed;

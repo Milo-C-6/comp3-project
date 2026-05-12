@@ -37,6 +37,7 @@ GameScreen currentScreen = LOGO;
 Font font = { 0 };
 Music music = { 0 };
 Sound fxCoin = { 0 };
+Texture2D txKey = { 0 };
 
 //----------------------------------------------------------------------------------
 // Global Variables Definition (local to this module)
@@ -76,6 +77,7 @@ int main(int argc, char *argv[])
     font = LoadFont("resources/mecha.png");
     //music = LoadMusicStream("resources/ambient.ogg"); // TODO: Load music
     fxCoin = LoadSound("resources/coin.wav");
+    txKey = LoadTexture("resources/key.png");
 
     SetMusicVolume(music, 1.0f);
     PlayMusicStream(music);
@@ -181,6 +183,7 @@ int main(int argc, char *argv[])
     UnloadFont(font);
     UnloadMusicStream(music);
     UnloadSound(fxCoin);
+    UnloadTexture(txKey);
 
     CloseAudioDevice();     // Close audio context
 

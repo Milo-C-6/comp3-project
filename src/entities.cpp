@@ -102,6 +102,10 @@ bool Player::CheckCollision(MapPart part)
             }
         }
     }
+    else if (part.partType == MP_KEY)
+    {
+        return CheckCollisionRecs((Rectangle){pos.x, pos.y, 25, 25}, (Rectangle){part.points.at(0).x, part.points.at(0).y, float(txKey.width), float(txKey.height)});
+    }
     else if (onSlope)
         return false;
     else if (part.partType == RECTANGLE)
@@ -111,7 +115,8 @@ bool Player::CheckCollision(MapPart part)
         xCollide = CheckCollisionRecs(Rectangle {pos.x+1  + vel.x, pos.y+1, 23, 23}, partRect);
     }
 
-    if (part.attributes.count(WIN) > 0 && part.attributes.at(WIN) > 0)
+    if ((part.attributes.count(WIN) > 0 && part.attributes.at(WIN) > 0)
+        || (part.attributes.count(LOCK) && part.attributes.at(LOCK) == -1))
         return xCollide || yCollide;
 
     if (xCollide)

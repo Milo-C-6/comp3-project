@@ -49,12 +49,13 @@ using namespace std;
 static int framesCounter = 0;
 static int finishScreen = 0;
 static GameMap gameMap;
+static GameMap bkpGameMap;
 
 // Actual level editing
 static int editScroll;
 static int editMode; // 0: Select, 1: Place, 2: Move, 3: Copy, 4: Delete
 static int partScroll;
-static int partIndex; // 0: Rectangle, 1: Slope, 2: Text, 3: Spawn 
+static int partIndex; // 0: Rectangle, 1: Slope, 2: Text, 3: Spawn, 4: Key
 static int selectedPart;
 // Camera
 static Camera2D camera = { 0 };
@@ -305,6 +306,9 @@ void DrawEditorScreen(void)
                         DrawRectangle(mouseWorldPos.x+i/4*30, mouseWorldPos.y-i%4*30, 25, 25, Fade(BLUE, 0.1));
                     DrawText("Spawn", mouseWorldPos.x, mouseWorldPos.y-120, 16, Fade(BLACK, 0.1));
                     break;
+                case 4:
+                    DrawTexture(txKey, mouseWorldPos.x, mouseWorldPos.y, Fade(WHITE, 0.1));
+                    break;
                 default: // idfk what to do here
                     break;
             }
@@ -349,8 +353,8 @@ void DrawMainPanel(void)
     if (!testing)
     {
         // Part mode 
-        GuiSetTooltip("Part selection: Rectangle, Slope, Text, Spawn");
-        GuiToggleGroup((Rectangle){280, 8, 24, 24}, "#80#;#220#;#31#;#142#", &partIndex);
+        GuiSetTooltip("Part selection: Rectangle, Slope, Text, Spawn, Key");
+        GuiToggleGroup((Rectangle){280, 8, 24, 24}, "#80#;#220#;#31#;#142#;#151#", &partIndex);
         GuiSetTooltip("Start testing the level");
         if (GuiButton((Rectangle){float(screenWidth-32), 8, 24, 24}, "#131#")) InitTesting();
     }
@@ -389,7 +393,7 @@ void DrawSavePanel(void)
 void DrawPartPanel(void)
 {
     if (selectedPart == -1 || editMode > 1) return;
-    
+    // TODO: Add input values for Lock, and special stuff for the keys
     if (GuiWindowBox(partInfoRect, "Part info")) {selectedPart = -1; inputSelection = 0; return;}
     string inputLabels[4] = {"X:", "Y:","Width:","Height:"};
     
@@ -447,6 +451,9 @@ void DrawPartBrowser(void)
             case MP_TEXT:
                 partList.append("Text;");
                 break;
+            case MP_KEY:
+                partList.append("Keys;");
+                break;
             default:
                 break;
         }
@@ -489,8 +496,11 @@ int PlacePart(int partI, GameMap *gMap)
             gMap->spawn = mouseWorldPos;
             // return -2;
             return -1;
+        case 4: // Key
+            gMap->mapParts.push_back(MapPart(MP_KEY, WHITE, vector<Vector2>{mouseWorldPos}, unordered_map<PartAttributes, int>{{LOCK, 1}}));
+            return gMap->mapParts.size()-1;
         default: // idfk what to do here
-        break;
+            break;
     }
     return -1;
 }
@@ -501,7 +511,9 @@ int getClickedPart(GameMap gMap)
     {
         if ((mapPart.partType == RECTANGLE && CheckCollisionPointRec(mouseWorldPos, (Rectangle){mapPart.points[0].x, mapPart.points[0].y, mapPart.points[1].x, mapPart.points[1].y}))
             || (mapPart.partType == SLOPE && CheckCollisionPointTriangle(mouseWorldPos, mapPart.points[0], mapPart.points[1], mapPart.points[2]))
-            || (mapPart.partType == MP_TEXT && CheckCollisionPointRec(mouseWorldPos, (Rectangle){mapPart.points[0].x, mapPart.points[0].y, float(MeasureText(mapPart.label.c_str(), 16)), 8})))
+            || (mapPart.partType == MP_TEXT && CheckCollisionPointRec(mouseWorldPos, (Rectangle){mapPart.points[0].x, mapPart.points[0].y, float(MeasureText(mapPart.label.c_str(), 16)), 8}))
+            || (mapPart.partType == MP_KEY && CheckCollisionPointRec(mouseWorldPos, (Rectangle){mapPart.points[0].x, mapPart.points[0].y, float(txKey.width), float(txKey.height)}))
+        )
         {
             setCPartInfo(mapPart);
             return counter;
@@ -630,6 +642,8 @@ void ControlKeybinds(void)
         partIndex = 2;
     else if (IsKeyReleased(KEY_R))
         partIndex = 3;
+    else if (IsKeyReleased(KEY_T))
+        partIndex = 4;
 }
 void setCPartInfo(MapPart mapPart)
 {
@@ -716,6 +730,7 @@ void InitTesting(void)
 {
     testing = true;
     camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
+    bkpGameMap = gameMap;
     RestartLevel(&gameMap, &players);
     // Gui edits
     GuiSetStyle(DEFAULT, BACKGROUND_COLOR, 0xf4d0d0ff);
@@ -727,6 +742,8 @@ void FinishTesting(void)
     testing = false;
     camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
     camera.target = Vector2Zero();
+    gameMap = bkpGameMap;
+    delete &bkpGameMap;
     // Reset gui style
     GuiLoadStyleDefault();
 }

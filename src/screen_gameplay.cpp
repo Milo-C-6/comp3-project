@@ -181,15 +181,30 @@ void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
                 continue;
             plr.CheckCollision(MapPart(RECTANGLE, BLACK, vector<Vector2>{plr2.pos, {25, 25}}));
         }
-            // Map collision
+        // Map collision
+        int counter = 0;
         for (MapPart part : gMap->mapParts)
+        {
             if (plr.CheckCollision(part))
             {
                 if (part.attributes.count(KILL) && part.attributes.at(KILL) > 0)
                     RestartLevel(gMap, plrs);
                 else if (part.attributes.count(WIN) && part.attributes.at(WIN) > 0)
                     plrsInWin++;
+                else if (part.partType == MP_KEY)
+                {
+                    for (MapPart &part2 : gMap->mapParts)
+                        if (part2.attributes.count(LOCK) > 0 && part2.attributes.at(LOCK) == part.attributes.at(LOCK))
+                        {
+                            part2.attributes.at(LOCK) = -1;
+                            part2.color = Fade(part2.color, 0.5);
+                        }
+
+                    gMap->mapParts.erase(gMap->mapParts.begin() + counter);
+                }
             } 
+            counter++;
+        }
         plr.UpdatePosition();
     }
 
@@ -263,12 +278,21 @@ void DrawMap(GameMap gMap)
 {
     for (MapPart part : gMap.mapParts)
     {
-        if (part.partType == RECTANGLE)
-            DrawRectangle(part.points[0].x, part.points[0].y, part.points[1].x, part.points[1].y, part.color);
-        else if (part.partType == SLOPE)
-            DrawTriangle(part.points[0], part.points[1], part.points[2], part.color);
-        else if (part.partType == MP_TEXT)
-            DrawText(part.label.c_str(), part.points[0].x, part.points[0].y, 16, part.color);
+        switch (part.partType)
+        {
+            case RECTANGLE: // make a switch statement stupid
+                DrawRectangle(part.points[0].x, part.points[0].y, part.points[1].x, part.points[1].y, part.color);
+                break;
+            case SLOPE:
+                DrawTriangle(part.points[0], part.points[1], part.points[2], part.color);
+                break;
+            case MP_TEXT:
+                DrawText(part.label.c_str(), part.points[0].x, part.points[0].y, 16, part.color);
+                break;
+            case MP_KEY:
+                DrawTexture(txKey, part.points.at(0).x, part.points.at(0).y, part.color);
+                break;
+        } 
     }
 }
 void DrawGameplayUi(void)
@@ -297,5 +321,7 @@ void StartLevel(void)
     inputGameMapFile >> gameMap;
     inputGameMapFile.close();
 
+    gameMap.mapParts.push_back(MapPart(RECTANGLE, BLACK, vector<Vector2>{{0, 120}, {20, 20}}, unordered_map<PartAttributes, int>{{LOCK, 1}}));
+    gameMap.mapParts.push_back(MapPart(MP_KEY, WHITE, vector<Vector2>{{80, 120}}, unordered_map<PartAttributes, int>{{LOCK, 1}}));
     RestartLevel(&gameMap, &players);
 }

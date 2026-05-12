@@ -26,8 +26,8 @@
 
 using namespace std;
 
-typedef enum PartType { RECTANGLE, SLOPE, MP_TEXT } PartType;
-typedef enum PartAttributes { WIN, KILL, BOUNCY, LAUNCHER, MOVING } PartAttributes;
+typedef enum PartType { RECTANGLE, SLOPE, MP_TEXT, MP_KEY } PartType;
+typedef enum PartAttributes { WIN, KILL, BOUNCY, LAUNCHER, MOVING, LOCK } PartAttributes;
 
 class MapPart 
 {
