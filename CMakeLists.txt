@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.24...3.30)
+set(CMAKE_GENERATOR "Unix Makefiles")
 project(comp3-project C CXX)
 set(CMAKE_CXX_STANDARD 23)
 
