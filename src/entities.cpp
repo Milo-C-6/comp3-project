@@ -104,7 +104,10 @@ bool Player::CheckCollision(MapPart part)
     }
     else if (part.partType == MP_KEY)
     {
-        return CheckCollisionRecs((Rectangle){pos.x, pos.y, 25, 25}, (Rectangle){part.points.at(0).x, part.points.at(0).y, float(txKey.width), float(txKey.height)});
+        if (part.attributes[LOCK] == -1)
+            return false;
+        else
+            return CheckCollisionRecs((Rectangle){pos.x, pos.y, 25, 25}, (Rectangle){part.points.at(0).x, part.points.at(0).y, float(txKey.width), float(txKey.height)});
     }
     else if (onSlope)
         return false;

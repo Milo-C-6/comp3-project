@@ -46,6 +46,7 @@ static int LastKeyPressed = 0;
 static int framesCounter = 0;
 static int finishScreen = 0; // maybe later remove?
 static vector<Player> players = { Player(50, 50, 0), Player(50, 80, 1) };
+static vector<MapPart> backUpMapParts;
 static GameMap gameMap;
 static Camera2D camera = { 0 };
 static float dropInAlpha = 0;
@@ -86,7 +87,7 @@ void InitGameplayScreen(int lvl, string world)
 // Gameplay Screen Update logic
 void UpdateGameplayScreen(void)
 {
-    UpdateLevel(&gameMap, &players, &camera);
+    UpdateLevel(&gameMap, backUpMapParts, &players, &camera);
     // Check win
     if (plrsInWin >= players.size())
     {
@@ -124,33 +125,7 @@ int FinishGameplayScreen(void)
     return finishScreen;
 }
 
-// void LoadLevel(void)
-// {
-//     // TODO: We need a proper file level format that we can use to load from, rather than hard coded levels.
-//     gameMap.title = "0: Debug";
-//     gameMap.description = "For debbugging the game";
-//     gameMap.author = "Milo";
-//     gameMap.spawn = Vector2{50, 50};
-//     gameMap.levelSize = Vector2{2500, 500};
-
-//     gameMap.mapParts = {
-//         MapPart(SLOPE, GOLD, vector<Vector2>{ {399, 119}, {399, 155}, {500, 155} }), // Slopes have to be drawn first, and slightly overlapped into other things
-//         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {0, 150}, {200, 50} }),
-//         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {200, 120}, {200, 50} }),
-//         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 150}, {500, 50} }),
-//         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {400, 0}, {500, 50} }),
-//         MapPart(RECTANGLE, RED, vector<Vector2>{ {300, 0}, {50, 50} }, unordered_map<PartAttributes, int>{ {KILL, 1} }),
-//         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {-250, 200}, {200, 50} }),
-//         MapPart(RECTANGLE, ORANGE, vector<Vector2>{ {-50, 150}, {25, 50} }),
-//         MapPart(RECTANGLE, BLACK, vector<Vector2>{ {-85, 150}, {25, 50} }, unordered_map<PartAttributes, int>{ {LAUNCHER, -5} }),
-//         MapPart(RECTANGLE, LIME, vector<Vector2>{ {-120, 150}, {25, 50} }, unordered_map<PartAttributes, int>{ {BOUNCY, 1} }),
-//         MapPart(RECTANGLE, VIOLET, vector<Vector2>{ {-155, 180}, {25, 50} }, unordered_map<PartAttributes, int>{ {MOVING, 1} })
-//     };
-
-//     gameMap.mapParts[10].formulaY = "180+20*sin(t)";
-// }
-
-void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
+void UpdateLevel(GameMap *gMap, vector<MapPart> bkpMapParts, vector<Player> *plrs, Camera2D *cam2d)
 {
     // Reset values
     plrKeyPressed = false;
@@ -164,7 +139,7 @@ void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
         // Check if they're out of bounds
         if (!CheckCollisionPointRec(plr.pos, {-gMap->levelSize.x/2, -gMap->levelSize.y/2, gMap->levelSize.x, gMap->levelSize.y}))
         {
-            RestartLevel(gMap, plrs);
+            RestartLevel(gMap, bkpMapParts, plrs);
             return;
         }
 
@@ -182,28 +157,30 @@ void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
             plr.CheckCollision(MapPart(RECTANGLE, BLACK, vector<Vector2>{plr2.pos, {25, 25}}));
         }
         // Map collision
-        int counter = 0;
-        for (MapPart part : gMap->mapParts)
+        for (MapPart &part : gMap->mapParts)
         {
             if (plr.CheckCollision(part))
             {
                 if (part.attributes.count(KILL) && part.attributes.at(KILL) > 0)
-                    RestartLevel(gMap, plrs);
+                    RestartLevel(gMap, bkpMapParts, plrs);
                 else if (part.attributes.count(WIN) && part.attributes.at(WIN) > 0)
                     plrsInWin++;
                 else if (part.partType == MP_KEY)
                 {
                     for (MapPart &part2 : gMap->mapParts)
+                    {
+                        if (part2.partType == MP_KEY)
+                            continue;
                         if (part2.attributes.count(LOCK) > 0 && part2.attributes.at(LOCK) == part.attributes.at(LOCK))
                         {
                             part2.attributes.at(LOCK) = -1;
                             part2.color = Fade(part2.color, 0.5);
                         }
+                    }
 
-                    gMap->mapParts.erase(gMap->mapParts.begin() + counter);
+                    part.attributes.at(LOCK) = -1;
                 }
             } 
-            counter++;
         }
         plr.UpdatePosition();
     }
@@ -263,8 +240,10 @@ void UpdateLevel(GameMap *gMap, vector<Player> *plrs, Camera2D *cam2d)
     }
 }
 
-void RestartLevel(GameMap *gMap, vector<Player> *plrs)
+void RestartLevel(GameMap *gMap, vector<MapPart> bkpMapParts, vector<Player> *plrs)
 {
+    gMap->mapParts = bkpMapParts;
+
     int i = 0;
     for (Player &plr : *plrs)
     {
@@ -290,6 +269,8 @@ void DrawMap(GameMap gMap)
                 DrawText(part.label.c_str(), part.points[0].x, part.points[0].y, 16, part.color);
                 break;
             case MP_KEY:
+                if (part.attributes[LOCK] == -1)
+                    break;
                 DrawTexture(txKey, part.points.at(0).x, part.points.at(0).y, part.color);
                 break;
         } 
@@ -321,7 +302,7 @@ void StartLevel(void)
     inputGameMapFile >> gameMap;
     inputGameMapFile.close();
 
-    gameMap.mapParts.push_back(MapPart(RECTANGLE, BLACK, vector<Vector2>{{0, 120}, {20, 20}}, unordered_map<PartAttributes, int>{{LOCK, 1}}));
-    gameMap.mapParts.push_back(MapPart(MP_KEY, WHITE, vector<Vector2>{{80, 120}}, unordered_map<PartAttributes, int>{{LOCK, 1}}));
-    RestartLevel(&gameMap, &players);
+    backUpMapParts = gameMap.mapParts;
+
+    RestartLevel(&gameMap, backUpMapParts, &players);
 }

@@ -49,7 +49,7 @@ using namespace std;
 static int framesCounter = 0;
 static int finishScreen = 0;
 static GameMap gameMap;
-static GameMap bkpGameMap;
+static vector<MapPart> backUpMapParts;
 
 // Actual level editing
 static int editScroll;
@@ -72,8 +72,8 @@ static bool showPartBrowser;
 // Part Info
 static int cPartValues[6];
 static bool cPartChecks[4];
-const PartAttributes attributes[4] = {KILL, BOUNCY, WIN, MOVING};
-static int cPartLauncher = 0;
+const PartAttributes attributes[6] = {KILL, BOUNCY, WIN, MOVING, LAUNCHER, LOCK};
+static int cPartInts[2] = { 0 };
 static int pColorScroll = 0;
 static int colorIndex = 2;
 static char cPartFormulaX[128];
@@ -159,7 +159,7 @@ void UpdateEditorScreen(void)
 {
     if (testing)
     {
-        UpdateLevel(&gameMap, &players, &camera);
+        UpdateLevel(&gameMap, backUpMapParts, &players, &camera);
         return;
     }
     cameraMovements();
@@ -243,7 +243,8 @@ void UpdateEditorScreen(void)
             MapPart& sPart = gameMap.mapParts.at(selectedPart);
             int end = 2;
             if (sPart.partType == SLOPE) end = 3;
-            else if (sPart.partType == MP_TEXT) 
+            else if (sPart.partType == MP_KEY) end = 1;
+            else if (sPart.partType == MP_TEXT)
             {
                 end = 1;
                 sPart.label = cPartText;
@@ -254,11 +255,24 @@ void UpdateEditorScreen(void)
                 sPart.points[i].y = cPartValues[2*i+1];
             }
             sPart.color = colors[colorIndex];
-            for (int aIndex = 0; aIndex < 4; aIndex++)
-                if (cPartChecks[aIndex])
-                    sPart.attributes[attributes[aIndex]] = 1;
-            if (cPartLauncher != 0)
-                sPart.attributes[LAUNCHER] = cPartLauncher;
+            for (int aIndex = 0; aIndex < 6; aIndex++)
+            {
+                if (aIndex < 4)
+                {
+                    if (cPartChecks[aIndex])
+                        sPart.attributes[attributes[aIndex]] = 1;
+                    else
+                        sPart.attributes.erase(attributes[aIndex]);
+                }
+                else
+                {
+                    if (cPartInts[aIndex-4] != 0)
+                        sPart.attributes[attributes[aIndex]] = cPartInts[aIndex-4];
+                    else
+                        sPart.attributes.erase(attributes[aIndex]);
+                }
+
+            }
             sPart.formulaX = cPartFormulaX;
             sPart.formulaY = cPartFormulaY;
         }
@@ -348,13 +362,13 @@ void DrawMainPanel(void)
 
     // Edit mode
     GuiSetTooltip("Edit modes: Select, Place, Move, Copy, Remove");
-    GuiToggleGroup((Rectangle){122, 8, 24, 24}, "#21#;#23#;#67#;#16#;#143#", &editMode);
+    GuiToggleGroup((Rectangle){112, 8, 24, 24}, "#21#;#23#;#67#;#16#;#143#", &editMode);
     
     if (!testing)
     {
         // Part mode 
         GuiSetTooltip("Part selection: Rectangle, Slope, Text, Spawn, Key");
-        GuiToggleGroup((Rectangle){280, 8, 24, 24}, "#80#;#220#;#31#;#142#;#151#", &partIndex);
+        GuiToggleGroup((Rectangle){270, 8, 24, 24}, "#80#;#220#;#31#;#142#;#151#", &partIndex);
         GuiSetTooltip("Start testing the level");
         if (GuiButton((Rectangle){float(screenWidth-32), 8, 24, 24}, "#131#")) InitTesting();
     }
@@ -362,9 +376,9 @@ void DrawMainPanel(void)
     {
         // Part mode 
         GuiSetTooltip("Add player");
-        if (GuiButton((Rectangle){280, 8, 24, 24}, "#150#")) players.push_back(Player(gameMap.spawn.x, gameMap.spawn.y, 3));
+        if (GuiButton((Rectangle){270, 8, 24, 24}, "#150#")) players.push_back(Player(gameMap.spawn.x, gameMap.spawn.y, 3));
         GuiSetTooltip("Remove player");
-        if (GuiButton((Rectangle){306, 8, 24, 24}, "#147#")) players.pop_back();
+        if (GuiButton((Rectangle){296, 8, 24, 24}, "#147#")) players.pop_back();
         GuiSetTooltip("Stop testing");
         if (GuiButton((Rectangle){float(screenWidth-32), 8, 24, 24}, "#133#")) FinishTesting();
     }
@@ -372,7 +386,7 @@ void DrawMainPanel(void)
     GuiSetTooltip(NULL);
     
     // Set level height and width
-    if (GuiSpinner((Rectangle){458, 8, 120, 24}, "Level Width:", &levelWidth, 500, 500000, inputSelection == 4)) inputSelection = 4;
+    if (GuiSpinner((Rectangle){468, 8, 120, 24}, "Level Width:", &levelWidth, 500, 500000, inputSelection == 4)) inputSelection = 4;
     if (GuiSpinner((Rectangle){630, 8, 120, 24}, "Height:", &levelHeight, 500, 500000, inputSelection == 5)) inputSelection = 5;
 }
 void DrawSavePanel(void)
@@ -407,22 +421,23 @@ void DrawPartPanel(void)
     
     GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+30, 90, 25}, inputLabels[0].c_str(), &cPartValues[0], -gameMap.levelSize.x+gameMap.levelSize.x/2, gameMap.levelSize.x/2, inputSelection == 6);
     GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+60, 90, 25}, inputLabels[1].c_str(), &cPartValues[1], -gameMap.levelSize.x+gameMap.levelSize.x/2, gameMap.levelSize.x/2, inputSelection == 7);
-    if (gameMap.mapParts[selectedPart].partType != MP_TEXT)
+    if (gameMap.mapParts[selectedPart].partType == MP_TEXT)
+    {
+        GuiLabel((Rectangle){partInfoRect.x+10, partInfoRect.y+185, 55, 20}, "Label");
+        if (GuiTextBox((Rectangle){partInfoRect.x+70, partInfoRect.y+185, 200, 20}, cPartText, 64, inputSelection == 15)) inputSelection = 15;
+    } // I was going to put a MP_Key inbentween, and then I noticed I don't need to do that. Oh well, maybe, possibly, more readable code here ig
+    else
     {
         GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+90, 90, 25}, inputLabels[2].c_str(), &cPartValues[2], -gameMap.levelSize.x, gameMap.levelSize.x, inputSelection == 8);
         GuiSpinner((Rectangle){partInfoRect.x+45, partInfoRect.y+120, 90, 25}, inputLabels[3].c_str(), &cPartValues[3], -gameMap.levelSize.y, gameMap.levelSize.y, inputSelection == 9);
         // Attributes
         GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+30, 20, 20}, "Kill", &cPartChecks[0]);
         GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+55, 20, 20}, "Bouncy", &cPartChecks[1]);
-        GuiSpinner((Rectangle){partInfoRect.x+200, partInfoRect.y+80, 90, 20}, "Launcher", &cPartLauncher, -256, 256, inputSelection == 12);
-        GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+105, 20, 20}, "Win", &cPartChecks[2]);
-    }
-    else
-    {
-        GuiLabel((Rectangle){partInfoRect.x+10, partInfoRect.y+185, 55, 20}, "Label");
-        if (GuiTextBox((Rectangle){partInfoRect.x+70, partInfoRect.y+185, 200, 20}, cPartText, 64, inputSelection == 15)) inputSelection = 15;
+        GuiSpinner((Rectangle){partInfoRect.x+200, partInfoRect.y+80, 90, 20}, "Launcher", &cPartInts[0], -256, 256, inputSelection == 12);
+        GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+105, 20, 20}, "Win", &cPartChecks[2]); 
     }
     GuiCheckBox((Rectangle){partInfoRect.x+145, partInfoRect.y+130, 20, 20}, "Moving", &cPartChecks[3]);
+    if (GuiSpinner((Rectangle){partInfoRect.x+200, partInfoRect.y+155, 90, 20}, "Lock ID", &cPartInts[1], 0, 256, inputSelection == 16)) inputSelection = 16;
     GuiLabel((Rectangle){partInfoRect.x+10, partInfoRect.y+215, 55, 20}, "X Formula");
     if (GuiTextBox((Rectangle){partInfoRect.x+70, partInfoRect.y+215, 200, 20}, cPartFormulaX, 64, inputSelection == 13)) inputSelection = 13;
     GuiLabel((Rectangle){partInfoRect.x+10, partInfoRect.y+245, 55, 20}, "Y Formula");
@@ -460,7 +475,7 @@ void DrawPartBrowser(void)
 
     GuiListView((Rectangle){float(screenWidth-100), 70, 100, float(screenHeight-70)}, partList.c_str(), &partBrowserScroll, &active);
 
-    if (active > -1 && gameMap.mapParts.size() > 0)
+    if (active > -1 && gameMap.mapParts.size() != active)
     {
         selectedPart = -1;
         gameMap.mapParts.erase(gameMap.mapParts.begin() + active);
@@ -470,7 +485,7 @@ int PlacePart(int partI, GameMap *gMap)
 {
     // Reset cPart values
     fill(begin(cPartChecks), begin(cPartChecks)+4, false);
-    cPartLauncher = 0;
+    fill(begin(cPartInts), begin(cPartInts)+2, 0);
     cPartValues[0] = mouseWorldPos.x; cPartValues[1] = mouseWorldPos.y;
     memset(cPartFormulaX, 0, sizeof(cPartFormulaX));
     memset(cPartFormulaY, 0, sizeof(cPartFormulaY));
@@ -497,7 +512,7 @@ int PlacePart(int partI, GameMap *gMap)
             // return -2;
             return -1;
         case 4: // Key
-            gMap->mapParts.push_back(MapPart(MP_KEY, WHITE, vector<Vector2>{mouseWorldPos}, unordered_map<PartAttributes, int>{{LOCK, 1}}));
+            gMap->mapParts.push_back(MapPart(MP_KEY, WHITE, vector<Vector2>{mouseWorldPos}));
             return gMap->mapParts.size()-1;
         default: // idfk what to do here
             break;
@@ -649,6 +664,7 @@ void setCPartInfo(MapPart mapPart)
 {
     int end = 2;
     if (mapPart.partType == SLOPE) end = 3;
+    else if (mapPart.partType == MP_KEY) end = 1;
     else if (mapPart.partType == MP_TEXT) 
     {
         end = 1;
@@ -660,19 +676,18 @@ void setCPartInfo(MapPart mapPart)
         cPartValues[2*i+1] = mapPart.points[i].y;
     }
     // Check attributes
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 6; i++)
     {
-        if (mapPart.attributes.count(attributes[i]) > 0 && mapPart.attributes.at(attributes[i]) > 0)
-        {
-            cPartChecks[i] = true;
-        }
+        if (i < 4)
+            cPartChecks[i] = (mapPart.attributes.count(attributes[i]) > 0 && mapPart.attributes.at(attributes[i]) > 0);
         else
-            cPartChecks[i] = false;
+        {
+            if (mapPart.attributes.count(attributes[i]) > 0)
+                cPartInts[i-4] = mapPart.attributes.at(attributes[i]);
+            else
+                cPartInts[i-4] = 0;
+        }
     }
-    if (mapPart.attributes.count(LAUNCHER) > 0)
-        cPartLauncher = mapPart.attributes.at(LAUNCHER);
-    else
-        cPartLauncher = 0;
 
     if (!mapPart.formulaX.empty())
         strcpy(cPartFormulaX, mapPart.formulaX.c_str());
@@ -730,8 +745,8 @@ void InitTesting(void)
 {
     testing = true;
     camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
-    bkpGameMap = gameMap;
-    RestartLevel(&gameMap, &players);
+    backUpMapParts = gameMap.mapParts;
+    RestartLevel(&gameMap, backUpMapParts, &players);
     // Gui edits
     GuiSetStyle(DEFAULT, BACKGROUND_COLOR, 0xf4d0d0ff);
     GuiSetStyle(DEFAULT, BORDER_COLOR_NORMAL, 0xfd2828ff);
@@ -742,8 +757,7 @@ void FinishTesting(void)
     testing = false;
     camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
     camera.target = Vector2Zero();
-    gameMap = bkpGameMap;
-    delete &bkpGameMap;
+    gameMap.mapParts = backUpMapParts;
     // Reset gui style
     GuiLoadStyleDefault();
 }

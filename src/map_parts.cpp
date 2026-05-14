@@ -89,7 +89,7 @@ std::ostream& operator<<(std::ostream& os, const MapPart& mapPart)
     os << mapPart.color.b << " ";
     int end = 2;
     if (mapPart.partType == SLOPE) end = 3;
-    else if (mapPart.partType == MP_TEXT) end = 1;
+    else if (mapPart.partType == MP_TEXT || mapPart.partType == MP_KEY) end = 1;
     for (int i = 0; i < end; i++)
     {
         os << mapPart.points[i].x << " ";
@@ -127,7 +127,7 @@ string& operator>>(string& line, MapPart& mapPart)
     mapPart.points.clear();
     int end = 2;
     if (mapPart.partType == SLOPE) end = 3;
-    else if (mapPart.partType == MP_TEXT) end = 1;
+    else if (mapPart.partType == MP_TEXT || mapPart.partType == MP_KEY) end = 1;
     for (int i = 0; i < end; i++)
     {
         Vector2 newPoint;
